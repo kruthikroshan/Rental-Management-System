@@ -23,6 +23,7 @@ import Reports from "./pages/Reports";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import BookingWizard from "./components/BookingWizard/BookingWizard";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredPermission="read_rentals">
                   <Bookings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/bookings/new" 
+              element={
+                <ProtectedRoute requiredPermission="read_rentals">
+                  <BookingWizard />
                 </ProtectedRoute>
               } 
             />
