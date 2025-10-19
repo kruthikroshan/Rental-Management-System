@@ -55,7 +55,7 @@ export interface DeliveryResponse {
 
 class DeliveryService {
   private getAuthHeaders() {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('auth_token');
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',

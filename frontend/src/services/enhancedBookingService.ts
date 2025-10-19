@@ -12,7 +12,7 @@ const apiClient = axios.create({
 
 // Add auth token to requests
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('auth_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -835,8 +835,20 @@ class BookingService {
   // Get categories
   async getCategories(): Promise<{ data: Category[]; success: boolean }> {
     try {
-      const response = await apiClient.get('/categories');
-      return { data: response.data, success: true };
+      // TODO: Implement categories endpoint in backend
+      // const response = await apiClient.get('/categories');
+      // return { data: response.data, success: true };
+      
+      // Using mock data until backend endpoint is implemented
+      const mockCategories: Category[] = [
+        { id: 1, name: "Photography", slug: "photography", isActive: true, productsCount: 15, imageUrl: "/api/placeholder/200/150" },
+        { id: 2, name: "Events", slug: "events", isActive: true, productsCount: 12, imageUrl: "/api/placeholder/200/150" },
+        { id: 3, name: "Audio/Video", slug: "audio-video", isActive: true, productsCount: 18, imageUrl: "/api/placeholder/200/150" },
+        { id: 4, name: "Furniture", slug: "furniture", isActive: true, productsCount: 8, imageUrl: "/api/placeholder/200/150" },
+        { id: 5, name: "Sports Equipment", slug: "sports", isActive: true, productsCount: 22, imageUrl: "/api/placeholder/200/150" },
+        { id: 6, name: "Party Supplies", slug: "party-supplies", isActive: true, productsCount: 35, imageUrl: "/api/placeholder/200/150" }
+      ];
+      return { data: mockCategories, success: true };
     } catch (error) {
       console.error('Error fetching categories:', error);
       
