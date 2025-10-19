@@ -193,7 +193,7 @@ export default function Customers() {
             <div className="flex items-center space-x-2">
               <User className="w-8 h-8 text-primary" />
               <div>
-                <p className="text-2xl font-bold">{customers.length}</p>
+                <p className="text-2xl font-bold">{(customers || []).length}</p>
                 <p className="text-sm text-muted-foreground">Total Customers</p>
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function Customers() {
               <User className="w-8 h-8 text-green-600" />
               <div>
                 <p className="text-2xl font-bold text-green-600">
-                  {customers.filter(c => c.status === "active").length}
+                  {(customers || []).filter(c => c.status === "active").length}
                 </p>
                 <p className="text-sm text-muted-foreground">Active</p>
               </div>
@@ -218,7 +218,7 @@ export default function Customers() {
               <Star className="w-8 h-8 text-purple-600" />
               <div>
                 <p className="text-2xl font-bold text-purple-600">
-                  {customers.filter(c => c.status === "verified").length}
+                  {(customers || []).filter(c => c.status === "verified").length}
                 </p>
                 <p className="text-sm text-muted-foreground">Verified</p>
               </div>
@@ -231,7 +231,7 @@ export default function Customers() {
               <DollarSign className="w-8 h-8 text-yellow-600" />
               <div>
                 <p className="text-2xl font-bold text-yellow-600">
-                  ₹{customers.reduce((sum, c) => sum + c.totalRevenue, 0).toLocaleString()}
+                  ₹{(customers || []).reduce((sum, c) => sum + c.totalRevenue, 0).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Revenue</p>
               </div>
