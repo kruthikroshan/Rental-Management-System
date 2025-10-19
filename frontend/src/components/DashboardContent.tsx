@@ -181,8 +181,14 @@ export function DashboardContent() {
 
   // Navigation handlers for quick actions
   const handleCreateBooking = useCallback(() => {
-    navigate('/bookings/new');
-  }, [navigate]);
+    // Navigate to Products page where users can create bookings
+    navigate('/products');
+    toast({
+      title: "Create New Booking",
+      description: "Select a product to create a booking.",
+      duration: 3000,
+    });
+  }, [navigate, toast]);
 
   const handleViewAllBookings = useCallback(() => {
     navigate('/bookings');
@@ -198,6 +204,10 @@ export function DashboardContent() {
 
   const handleViewReports = useCallback(() => {
     navigate('/reports');
+  }, [navigate]);
+
+  const handleViewSettings = useCallback(() => {
+    navigate('/settings');
   }, [navigate]);
 
   // Memoized stat cards with responsive design
@@ -421,7 +431,7 @@ export function DashboardContent() {
             </Button>
             
             <Button 
-              onClick={() => navigate('/settings')}
+              onClick={handleViewSettings}
               className="flex flex-col items-center space-y-2 h-auto py-4 px-3"
               variant="outline"
             >
