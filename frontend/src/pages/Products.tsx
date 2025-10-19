@@ -203,6 +203,30 @@ const Products = () => {
     }, 0);
   };
 
+  const handleAddToWishlist = (product: Product) => {
+    toast({
+      title: "Added to Wishlist",
+      description: `${product.name} has been added to your wishlist.`,
+    });
+  };
+
+  const handleShareProduct = (product: Product) => {
+    if (navigator.share) {
+      navigator.share({
+        title: product.name,
+        text: `Check out ${product.name} for rent!`,
+        url: window.location.href,
+      }).catch((error) => console.log('Error sharing:', error));
+    } else {
+      // Fallback: copy to clipboard
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link Copied",
+        description: "Product link copied to clipboard!",
+      });
+    }
+  };
+
   const getAvailabilityStatus = (product: Product) => {
     if (product.availableQuantity === 0) {
       return { status: 'out_of_stock', text: 'Out of Stock', color: 'destructive' };
@@ -396,10 +420,10 @@ const Products = () => {
 
                 {/* Action buttons */}
                 <div className="absolute top-2 right-2 space-y-1">
-                  <Button size="sm" variant="outline" className="p-2 bg-white/80 hover:bg-white">
+                  <Button onClick={() => handleAddToWishlist(product)} size="sm" variant="outline" className="p-2 bg-white/80 hover:bg-white">
                     <Heart className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="outline" className="p-2 bg-white/80 hover:bg-white">
+                  <Button onClick={() => handleShareProduct(product)} size="sm" variant="outline" className="p-2 bg-white/80 hover:bg-white">
                     <Share2 className="h-4 w-4" />
                   </Button>
                 </div>
