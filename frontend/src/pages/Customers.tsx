@@ -108,6 +108,38 @@ export default function Customers() {
     await loadCustomers();
   };
 
+  const handleAddCustomer = () => {
+    toast({
+      title: "Add Customer",
+      description: "Add customer dialog will be implemented soon.",
+    });
+  };
+
+  const handleViewCustomer = (customer: ApiCustomer) => {
+    toast({
+      title: "View Customer",
+      description: `Viewing details for ${customer.name}`,
+    });
+  };
+
+  const handleEditCustomer = (customer: ApiCustomer) => {
+    toast({
+      title: "Edit Customer",
+      description: `Editing ${customer.name}`,
+    });
+  };
+
+  const handleBookForCustomer = (customer: ApiCustomer) => {
+    toast({
+      title: "Create Booking",
+      description: `Creating booking for ${customer.name}`,
+    });
+    // Navigate to products page after a short delay
+    setTimeout(() => {
+      window.location.href = '/products';
+    }, 1000);
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
@@ -152,7 +184,7 @@ export default function Customers() {
           <h1 className="text-3xl font-bold text-foreground">Customers</h1>
           <p className="text-muted-foreground">Manage your customer database</p>
         </div>
-        <Button className="bg-gradient-primary hover:bg-primary-hover">
+        <Button onClick={handleAddCustomer} className="bg-gradient-primary hover:bg-primary-hover">
           <Plus className="w-4 h-4 mr-2" />
           Add Customer
         </Button>
@@ -302,15 +334,15 @@ export default function Customers() {
 
               {/* Actions */}
               <div className="flex space-x-2 pt-2">
-                <Button size="sm" variant="outline" className="flex-1">
+                <Button onClick={() => handleViewCustomer(customer)} size="sm" variant="outline" className="flex-1">
                   <Eye className="w-4 h-4 mr-1" />
                   View
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1">
+                <Button onClick={() => handleEditCustomer(customer)} size="sm" variant="outline" className="flex-1">
                   <Edit className="w-4 h-4 mr-1" />
                   Edit
                 </Button>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Button onClick={() => handleBookForCustomer(customer)} size="sm" className="bg-green-600 hover:bg-green-700">
                   <Plus className="w-4 h-4 mr-1" />
                   Book
                 </Button>
