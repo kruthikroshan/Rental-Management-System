@@ -69,18 +69,27 @@ const Bookings = () => {
         sortOrder: 'desc'
       });
 
-      if (response.success) {
-        setBookings(response.data.bookings);
-        setBookingStats({
-          total: response.data.stats.totalBookings,
-          active: response.data.stats.activeBookings,
-          completed: response.data.stats.completedBookings,
-          cancelled: response.data.stats.cancelledBookings,
-          overdue: response.data.stats.overdueBookings
-        });
+      if (response.success && response.data) {
+        // Safely set bookings with fallback to empty array
+        setBookings(response.data.bookings || []);
+        
+        // Safely set stats with fallback values
+        if (response.data.stats) {
+          setBookingStats({
+            total: response.data.stats.totalBookings || 0,
+            active: response.data.stats.activeBookings || 0,
+            completed: response.data.stats.completedBookings || 0,
+            cancelled: response.data.stats.cancelledBookings || 0,
+            overdue: response.data.stats.overdueBookings || 0
+          });
+        }
+      } else {
+        // Ensure bookings is always an array
+        setBookings([]);
       }
     } catch (error) {
       console.error('Error loading bookings:', error);
+      setBookings([]); // Ensure bookings is always an array on error
       toast({
         title: "Error",
         description: "Failed to load bookings. Please try again.",
@@ -92,7 +101,7 @@ const Bookings = () => {
   };
 
   const filterBookings = () => {
-    let filtered = [...bookings];
+    let filtered = [...(bookings || [])]; // Safety check to prevent 'not iterable' error
 
     // Search filter
     if (searchTerm) {

@@ -283,7 +283,50 @@ class BookingService {
   async getBookings(filters: BookingFilters = {}): Promise<{ data: { bookings: Booking[]; total: number; stats: BookingStats }; success: boolean }> {
     try {
       const response = await apiClient.get('/bookings', { params: filters });
-      return { data: response.data, success: true };
+      
+      // Backend returns { success: true, data: { bookings, pagination } }
+      // We need to unwrap and add stats
+      const bookings = response.data.data?.bookings || [];
+      const total = response.data.data?.pagination?.total || 0;
+      
+      // Calculate stats from bookings data
+      const activeBookings = bookings.filter((b: Booking) => b.status === 'confirmed' || b.status === 'in_progress');
+      const completedBookings = bookings.filter((b: Booking) => b.status === 'completed');
+      const cancelledBookings = bookings.filter((b: Booking) => b.status === 'cancelled');
+      const overdueBookings = bookings.filter((b: Booking) => {
+        const today = new Date();
+        const endDate = new Date(b.endDate);
+        return endDate < today && (b.status === 'confirmed' || b.status === 'in_progress');
+      });
+      
+      const totalRevenue = completedBookings.reduce((sum: number, b: Booking) => sum + (b.finalAmount || 0), 0);
+      const pendingPayments = bookings.filter((b: Booking) => b.paymentStatus === 'pending' || b.paymentStatus === 'partial')
+        .reduce((sum: number, b: Booking) => sum + (b.payment?.pendingAmount || 0), 0);
+      
+      const bookingsByStatus: { [key: string]: number } = {};
+      bookings.forEach((b: Booking) => {
+        bookingsByStatus[b.status] = (bookingsByStatus[b.status] || 0) + 1;
+      });
+      
+      const stats: BookingStats = {
+        totalBookings: bookings.length,
+        activeBookings: activeBookings.length,
+        completedBookings: completedBookings.length,
+        cancelledBookings: cancelledBookings.length,
+        overdueBookings: overdueBookings.length,
+        totalRevenue,
+        pendingPayments,
+        averageBookingValue: bookings.length > 0 ? totalRevenue / completedBookings.length : 0,
+        bookingsByStatus,
+        monthlyBookings: [],
+        topProducts: [],
+        topCustomers: []
+      };
+      
+      return { 
+        data: { bookings, total, stats },
+        success: response.data.success 
+      };
     } catch (error) {
       console.error('Error fetching bookings:', error);
       
