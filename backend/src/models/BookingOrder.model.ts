@@ -58,10 +58,9 @@ const BookingOrderSchema = new Schema<IBookingOrder>(
   }
 );
 
-// Indexes
+// Indexes (bookingNumber unique index already created via schema definition)
 BookingOrderSchema.index({ customerId: 1 });
 BookingOrderSchema.index({ status: 1 });
-BookingOrderSchema.index({ bookingNumber: 1 }, { unique: true });
 BookingOrderSchema.index({ startDate: 1, endDate: 1 });
 
 export const BookingOrderModel = mongoose.model<IBookingOrder>('BookingOrder', BookingOrderSchema);

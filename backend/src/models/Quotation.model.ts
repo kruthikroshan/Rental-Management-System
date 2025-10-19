@@ -54,9 +54,8 @@ const QuotationSchema = new Schema<IQuotation>(
   }
 );
 
-// Indexes
+// Indexes (quotationNumber unique index already created via schema definition)
 QuotationSchema.index({ customerId: 1 });
 QuotationSchema.index({ status: 1 });
-QuotationSchema.index({ quotationNumber: 1 }, { unique: true });
 
 export const QuotationModel = mongoose.model<IQuotation>('Quotation', QuotationSchema);

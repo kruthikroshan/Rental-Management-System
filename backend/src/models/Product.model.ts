@@ -132,11 +132,10 @@ const ProductSchema = new Schema<IProduct>(
   }
 );
 
-// Indexes
+// Indexes (sku and slug unique indexes already created via schema definition)
 ProductSchema.index({ categoryId: 1 });
 ProductSchema.index({ isRentable: 1 });
 ProductSchema.index({ isActive: 1 });
-ProductSchema.index({ sku: 1 }, { unique: true });
 ProductSchema.index({ ownerId: 1 });
 ProductSchema.index({ approvalStatus: 1 });
 
