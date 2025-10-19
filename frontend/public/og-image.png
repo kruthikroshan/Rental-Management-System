@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" fill="none">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#1e40af"/>
+  
+  <!-- Grid pattern -->
+  <defs>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.2"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="630" fill="url(#grid)" />
+  
+  <!-- Main content area -->
+  <rect x="100" y="100" width="1000" height="430" rx="20" fill="white" opacity="0.95"/>
+  
+  <!-- Logo area -->
+  <circle cx="300" cy="250" r="60" fill="#1e40af"/>
+  <path d="M270 230L300 210L330 230V270H320V250H280V270H270V230Z" fill="white"/>
+  
+  <!-- Title -->
+  <text x="400" y="260" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#1e40af">RentEase</text>
+  <text x="400" y="300" font-family="Arial, sans-serif" font-size="24" fill="#64748b">Professional Rental Management System</text>
+  
+  <!-- Feature icons -->
+  <g transform="translate(400, 350)">
+    <!-- Calendar icon -->
+    <rect x="0" y="0" width="40" height="40" rx="4" fill="#10b981" opacity="0.2"/>
+    <rect x="8" y="12" width="24" height="20" rx="2" fill="none" stroke="#10b981" stroke-width="2"/>
+    <path d="M14 8V16M26 8V16" stroke="#10b981" stroke-width="2"/>
+    <text x="55" y="25" font-family="Arial, sans-serif" font-size="14" fill="#374151">Bookings</text>
+    
+    <!-- Inventory icon -->
+    <rect x="150" y="0" width="40" height="40" rx="4" fill="#f59e0b" opacity="0.2"/>
+    <rect x="162" y="8" width="16" height="24" rx="2" fill="none" stroke="#f59e0b" stroke-width="2"/>
+    <path d="M166 12H174M166 16H174M166 20H174" stroke="#f59e0b" stroke-width="1"/>
+    <text x="205" y="25" font-family="Arial, sans-serif" font-size="14" fill="#374151">Inventory</text>
+    
+    <!-- Payment icon -->
+    <rect x="300" y="0" width="40" height="40" rx="4" fill="#8b5cf6" opacity="0.2"/>
+    <rect x="308" y="14" width="24" height="16" rx="3" fill="none" stroke="#8b5cf6" stroke-width="2"/>
+    <circle cx="314" cy="22" r="2" fill="#8b5cf6"/>
+    <text x="355" y="25" font-family="Arial, sans-serif" font-size="14" fill="#374151">Payments</text>
+  </g>
+  
+  <!-- Bottom text -->
+  <text x="600" y="580" font-family="Arial, sans-serif" font-size="18" text-anchor="middle" fill="white" opacity="0.8">Streamline your rental business with comprehensive management tools</text>
+</svg>

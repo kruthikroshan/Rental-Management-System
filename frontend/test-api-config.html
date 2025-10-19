@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Configuration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 API Configuration Test</h1>
+    
+    <div class="card">
+        <h2>Environment Configuration</h2>
+        <div id="env-info"></div>
+    </div>
+
+    <div class="card">
+        <h2>Test API Endpoints</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testDashboard()">Test Dashboard</button>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        // Display environment configuration
+        const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+        const envInfo = document.getElementById('env-info');
+        envInfo.innerHTML = `
+            <div class="status info">
+                <strong>VITE_API_BASE_URL:</strong> "${API_BASE_URL}"<br>
+                <strong>Interpretation:</strong> ${API_BASE_URL ? 'Using absolute URL: ' + API_BASE_URL : 'Using relative URLs (will go through Vite proxy)'}<br>
+                <strong>Health URL:</strong> ${API_BASE_URL}/api/health<br>
+                <strong>Login URL:</strong> ${API_BASE_URL}/api/auth/login
+            </div>
+        `;
+
+        async function testHealth() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status info">Testing health endpoint...</div>';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                results.innerHTML = `
+                    <div class="status success">
+                        <strong>✅ Health Check Success!</strong><br>
+                        Status: ${response.status}<br>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ Health Check Failed!</strong><br>
+                        Error: ${error.message}<br>
+                        <strong>This means the backend is not accessible through the proxy.</strong>
+                    </div>
+                `;
+            }
+        }
+
+        async function testLogin() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status info">Testing login endpoint...</div>';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@test.com',
+                        password: 'Admin123!'
+                    })
+                });
+                const data = await response.json();
+                
+                if (response.ok) {
+                    results.innerHTML = `
+                        <div class="status success">
+                            <strong>✅ Login Success!</strong><br>
+                            User: ${data.data?.user?.name || 'N/A'}<br>
+                            Email: ${data.data?.user?.email || 'N/A'}<br>
+                            Token received: ${data.token ? 'Yes (' + data.token.substring(0, 20) + '...)' : 'No'}
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="status error">
+                            <strong>❌ Login Failed!</strong><br>
+                            Status: ${response.status}<br>
+                            Message: ${data.message || 'Unknown error'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ Login Request Failed!</strong><br>
+                        Error: ${error.message}<br>
+                        <strong>Check if backend server is running on port 3000</strong>
+                    </div>
+                `;
+            }
+        }
+
+        async function testDashboard() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<div class="status info">Testing dashboard endpoint (requires auth)...</div>';
+            
+            try {
+                const response = await fetch('/api/dashboard/stats');
+                
+                if (response.status === 401) {
+                    results.innerHTML = `
+                        <div class="status info">
+                            <strong>🔒 Dashboard Requires Authentication</strong><br>
+                            Status: 401 Unauthorized<br>
+                            This is expected. The endpoint is working but requires a valid token.<br>
+                            <strong>Try the Login test first to get a token.</strong>
+                        </div>
+                    `;
+                } else if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = `
+                        <div class="status success">
+                            <strong>✅ Dashboard Success!</strong><br>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="status error">
+                            <strong>❌ Dashboard Request Failed!</strong><br>
+                            Status: ${response.status}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="status error">
+                        <strong>❌ Dashboard Request Failed!</strong><br>
+                        Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            console.log('🔍 API Configuration Test Page Loaded');
+            console.log('VITE_API_BASE_URL:', API_BASE_URL);
+        });
+    </script>
+</body>
+</html>
