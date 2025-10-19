@@ -123,7 +123,7 @@ export default function Customers() {
     }
   };
 
-  const filteredCustomers = customers.filter(customer => {
+  const filteredCustomers = (customers || []).filter(customer => {
     const matchesSearch = 
       customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
