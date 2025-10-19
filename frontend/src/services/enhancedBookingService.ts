@@ -582,7 +582,11 @@ class BookingService {
   }): Promise<{ data: { products: Product[]; total: number }; success: boolean }> {
     try {
       const response = await apiClient.get('/products/available', { params: filters });
-      return { data: response.data, success: true };
+      // Backend returns { success: true, data: { products, total, pagination } }
+      return { 
+        data: response.data.data, // Extract the inner data object
+        success: response.data.success 
+      };
     } catch (error) {
       console.error('Error fetching available products:', error);
       

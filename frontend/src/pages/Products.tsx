@@ -74,15 +74,21 @@ const Products = () => {
         bookingService.getCategories()
       ]);
 
-      if (productsResponse.success) {
+      if (productsResponse.success && productsResponse.data && productsResponse.data.products) {
         setProducts(productsResponse.data.products);
+      } else {
+        console.warn('Products response missing data:', productsResponse);
+        setProducts([]); // Ensure products is always an array
       }
 
-      if (categoriesResponse.success) {
+      if (categoriesResponse.success && categoriesResponse.data) {
         setCategories([{ id: 0, name: 'All Categories', slug: 'all', isActive: true, productsCount: 0 }, ...categoriesResponse.data]);
+      } else {
+        setCategories([{ id: 0, name: 'All Categories', slug: 'all', isActive: true, productsCount: 0 }]);
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      setProducts([]); // Ensure products is always an array even on error
       toast({
         title: "Error",
         description: "Failed to load products. Please try again.",
@@ -93,7 +99,7 @@ const Products = () => {
     }
   };
 
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = (products || []).filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
