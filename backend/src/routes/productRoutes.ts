@@ -66,6 +66,9 @@ const updateProductValidation = [
 // Apply authentication middleware to all routes
 router.use(authenticate);
 
+// GET /api/products/available - Get available products for booking (MUST BE BEFORE /:id)
+router.get('/available', productController.getAvailableProducts.bind(productController));
+
 // GET /api/products - Get all products with pagination and filtering
 router.get('/', productController.getProducts.bind(productController));
 

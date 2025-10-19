@@ -191,4 +191,66 @@ export class ProductController {
       });
     }
   }
+
+  // Get available products (for booking)
+  async getAvailableProducts(req: Request, res: Response): Promise<void> {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const search = req.query.search as string;
+      const categoryId = req.query.categoryId as string;
+      const startDate = req.query.startDate as string;
+      const endDate = req.query.endDate as string;
+      
+      const query: any = {
+        isActive: true,
+        isRentable: true,
+        totalQuantity: { $gt: 0 }
+      };
+
+      if (search) {
+        query.$or = [
+          { name: new RegExp(search, 'i') },
+          { description: new RegExp(search, 'i') }
+        ];
+      }
+
+      if (categoryId) {
+        query.categoryId = categoryId;
+      }
+
+      // TODO: Add date availability check based on bookings
+      // For now, we return all active rentable products
+
+      const products = await ProductModel
+        .find(query)
+        .populate('categoryId', 'name')
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .sort({ createdAt: -1 });
+
+      const total = await ProductModel.countDocuments(query);
+
+      res.json({
+        success: true,
+        data: {
+          products,
+          total,
+          pagination: {
+            page,
+            limit,
+            total,
+            pages: Math.ceil(total / limit)
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Get available products error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch available products',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
 }

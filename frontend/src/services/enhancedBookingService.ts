@@ -609,8 +609,8 @@ class BookingService {
           maintenanceQuantity: 1,
           tags: ["camera", "photography", "professional", "DSLR"],
           images: [
-            { id: 1, url: "/api/placeholder/400/300", altText: "Professional Camera Kit", isPrimary: true, order: 1 },
-            { id: 2, url: "/api/placeholder/400/300", altText: "Camera Kit Contents", isPrimary: false, order: 2 }
+            { id: 1, url: "https://placehold.co/400x300?text=Product+Image", altText: "Professional Camera Kit", isPrimary: true, order: 1 },
+            { id: 2, url: "https://placehold.co/400x300?text=Product+Image", altText: "Camera Kit Contents", isPrimary: false, order: 2 }
           ],
           specifications: {
             "Camera Model": "Canon EOS R5",
@@ -651,8 +651,8 @@ class BookingService {
           maintenanceQuantity: 0,
           tags: ["wedding", "decoration", "events", "flowers", "lighting"],
           images: [
-            { id: 3, url: "/api/placeholder/400/300", altText: "Wedding Decoration Setup", isPrimary: true, order: 1 },
-            { id: 4, url: "/api/placeholder/400/300", altText: "Flower Arrangements", isPrimary: false, order: 2 }
+            { id: 3, url: "https://placehold.co/400x300?text=Product+Image", altText: "Wedding Decoration Setup", isPrimary: true, order: 1 },
+            { id: 4, url: "https://placehold.co/400x300?text=Product+Image", altText: "Flower Arrangements", isPrimary: false, order: 2 }
           ],
           specifications: {
             "Flower Arrangements": "20 centerpieces, 8 large arrangements",
@@ -691,7 +691,7 @@ class BookingService {
           maintenanceQuantity: 1,
           tags: ["audio", "sound", "speakers", "microphone", "events"],
           images: [
-            { id: 5, url: "/api/placeholder/400/300", altText: "Sound System Setup", isPrimary: true, order: 1 }
+            { id: 5, url: "https://placehold.co/400x300?text=Product+Image", altText: "Sound System Setup", isPrimary: true, order: 1 }
           ],
           specifications: {
             "Main Speakers": "2x JBL SRX835P",
@@ -730,7 +730,7 @@ class BookingService {
           maintenanceQuantity: 1,
           tags: ["furniture", "sofa", "chairs", "tables", "premium"],
           images: [
-            { id: 6, url: "/api/placeholder/400/300", altText: "Deluxe Furniture Set", isPrimary: true, order: 1 }
+            { id: 6, url: "https://placehold.co/400x300?text=Product+Image", altText: "Deluxe Furniture Set", isPrimary: true, order: 1 }
           ],
           specifications: {
             "Sofa Set": "3-seater + 2x 2-seater leather sofas",
@@ -769,7 +769,7 @@ class BookingService {
           maintenanceQuantity: 1,
           tags: ["lighting", "LED", "photography", "videography", "professional"],
           images: [
-            { id: 7, url: "/api/placeholder/400/300", altText: "Lighting Equipment", isPrimary: true, order: 1 }
+            { id: 7, url: "https://placehold.co/400x300?text=Product+Image", altText: "Lighting Equipment", isPrimary: true, order: 1 }
           ],
           specifications: {
             "LED Panels": "4x Aputure 300D Mark II",
@@ -808,7 +808,7 @@ class BookingService {
           maintenanceQuantity: 0,
           tags: ["DJ", "turntables", "mixer", "party", "music"],
           images: [
-            { id: 8, url: "/api/placeholder/400/300", altText: "DJ Equipment Setup", isPrimary: true, order: 1 }
+            { id: 8, url: "https://placehold.co/400x300?text=Product+Image", altText: "DJ Equipment Setup", isPrimary: true, order: 1 }
           ],
           specifications: {
             "Turntables": "2x Pioneer CDJ-3000",
