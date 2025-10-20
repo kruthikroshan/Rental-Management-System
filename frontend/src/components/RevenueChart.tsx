@@ -47,14 +47,14 @@ export function RevenueChart({ data, timeRange = '7days', chartType = 'area' }: 
       };
     }
 
-    const totalRevenue = data.reduce((sum, item) => sum + item.revenue, 0);
-    const totalBookings = data.reduce((sum, item) => sum + item.bookings, 0);
+    const totalRevenue = data.reduce((sum, item) => sum + (item.revenue || 0), 0);
+    const totalBookings = data.reduce((sum, item) => sum + (item.bookings || 0), 0);
     const averageRevenue = totalRevenue / data.length;
 
     // Calculate growth (compare first half vs second half)
     const midPoint = Math.floor(data.length / 2);
-    const firstHalfRevenue = data.slice(0, midPoint).reduce((sum, item) => sum + item.revenue, 0);
-    const secondHalfRevenue = data.slice(midPoint).reduce((sum, item) => sum + item.revenue, 0);
+    const firstHalfRevenue = data.slice(0, midPoint).reduce((sum, item) => sum + (item.revenue || 0), 0);
+    const secondHalfRevenue = data.slice(midPoint).reduce((sum, item) => sum + (item.revenue || 0), 0);
     const growth = firstHalfRevenue > 0 
       ? ((secondHalfRevenue - firstHalfRevenue) / firstHalfRevenue) * 100 
       : 0;
@@ -62,7 +62,7 @@ export function RevenueChart({ data, timeRange = '7days', chartType = 'area' }: 
     return {
       totalRevenue,
       averageRevenue,
-      growth: Math.round(growth * 10) / 10,
+      growth: isNaN(growth) ? 0 : Math.round(growth * 10) / 10,
       totalBookings,
     };
   }, [data]);
@@ -191,13 +191,13 @@ export function RevenueChart({ data, timeRange = '7days', chartType = 'area' }: 
             <div className="flex items-center gap-2">
               <DollarSign className="h-5 w-5 text-green-600" />
               <span className="text-2xl font-bold text-green-600">
-                {formatCurrency(analytics.totalRevenue)}
+                {formatCurrency(analytics.totalRevenue || 0)}
               </span>
             </div>
             <div className="flex items-center gap-1 text-sm mt-1">
               <TrendingUp className={`h-4 w-4 ${analytics.growth >= 0 ? 'text-green-600' : 'text-red-600'}`} />
               <span className={analytics.growth >= 0 ? 'text-green-600' : 'text-red-600'}>
-                {analytics.growth >= 0 ? '+' : ''}{analytics.growth}%
+                {analytics.growth >= 0 ? '+' : ''}{analytics.growth || 0}%
               </span>
               <span className="text-muted-foreground ml-1">vs previous period</span>
             </div>
@@ -220,13 +220,13 @@ export function RevenueChart({ data, timeRange = '7days', chartType = 'area' }: 
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Average Daily</p>
             <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-              {formatCurrency(analytics.averageRevenue)}
+              {formatCurrency(analytics.averageRevenue || 0)}
             </p>
           </div>
           <div className="text-center">
             <p className="text-sm text-muted-foreground">Total Bookings</p>
             <p className="text-lg font-bold text-gray-900 dark:text-gray-100">
-              {analytics.totalBookings}
+              {analytics.totalBookings || 0}
             </p>
           </div>
         </div>

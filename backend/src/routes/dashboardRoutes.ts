@@ -145,4 +145,30 @@ router.get('/recent-activities',
   dashboardController.getRecentActivities.bind(dashboardController)
 );
 
+// Get revenue chart data
+router.get('/revenue-chart', (req, res) => {
+  const { range = '7days' } = req.query;
+  
+  // Generate mock revenue data based on range
+  const days = range === '7days' ? 7 : range === '30days' ? 30 : 90;
+  const chartData: Array<{ date: string; revenue: number }> = [];
+  const today = new Date();
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+    const revenue = Math.floor(Math.random() * 20000) + 10000; // Random revenue between 10k-30k
+    
+    chartData.push({
+      date: date.toISOString().split('T')[0],
+      revenue: revenue
+    });
+  }
+  
+  res.json({
+    success: true,
+    data: chartData
+  });
+});
+
 export default router;

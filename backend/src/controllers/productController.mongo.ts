@@ -95,6 +95,27 @@ export class ProductController {
     try {
       const productData = req.body;
 
+      // Auto-generate slug from name if not provided
+      if (!productData.slug && productData.name) {
+        productData.slug = productData.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      // Set ownerId from authenticated user or use a default
+      if (!productData.ownerId) {
+        // TODO: Get from req.user when auth is implemented
+        // For now, use a mock ObjectId or make it optional
+        productData.ownerId = new (require('mongoose').Types.ObjectId)();
+      }
+
+      // Handle categoryId - convert to ObjectId or set default
+      if (productData.categoryId === 0 || !productData.categoryId) {
+        // Create a default category ObjectId
+        productData.categoryId = new (require('mongoose').Types.ObjectId)();
+      }
+
       const product = await ProductModel.create(productData);
 
       res.status(201).json({

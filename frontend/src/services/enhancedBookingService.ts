@@ -992,6 +992,47 @@ class BookingService {
       return new Blob([mockData], { type: 'application/json' });
     }
   }
+
+  // Create product
+  async createProduct(productData: Partial<Product>): Promise<{ 
+    data: Product; 
+    success: boolean 
+  }> {
+    try {
+      const response = await apiClient.post('/products', productData);
+      return { data: response.data, success: true };
+    } catch (error) {
+      console.error('Error creating product:', error);
+      throw error;
+    }
+  }
+
+  // Update product
+  async updateProduct(productId: number, productData: Partial<Product>): Promise<{ 
+    data: Product; 
+    success: boolean 
+  }> {
+    try {
+      const response = await apiClient.put(`/products/${productId}`, productData);
+      return { data: response.data, success: true };
+    } catch (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+  }
+
+  // Delete product
+  async deleteProduct(productId: number): Promise<{ 
+    success: boolean 
+  }> {
+    try {
+      await apiClient.delete(`/products/${productId}`);
+      return { success: true };
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
+  }
 }
 
 const bookingService = new BookingService();

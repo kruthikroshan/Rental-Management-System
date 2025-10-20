@@ -3,6 +3,7 @@ import { body } from 'express-validator';
 import {
   register,
   login,
+  googleLogin,
   refreshToken,
   getProfile,
   updateProfile,
@@ -108,6 +109,7 @@ const deleteAccountValidation = [
 // Public routes
 router.post('/register', authRateLimit, registerValidation, register);
 router.post('/login', authRateLimit, loginValidation, login);
+router.post('/google-login', authRateLimit, googleLogin);
 router.post('/refresh-token', validateRefreshToken, refreshToken);
 
 // Protected routes

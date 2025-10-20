@@ -10,6 +10,7 @@ import { Package, Search, Star, Calendar, MapPin, Filter, Eye, ShoppingCart, Plu
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import bookingService, { Product, Category } from '../services/enhancedBookingService';
 import { useToast } from '../hooks/use-toast';
+import { ProductDetailModal } from '../components/ProductDetailModal';
 
 interface BookingItem {
   productId: number;
@@ -43,6 +44,8 @@ const Products = () => {
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [availabilityFilter, setAvailabilityFilter] = useState('all');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showProductDetailModal, setShowProductDetailModal] = useState(false);
+  const [productDetailMode, setProductDetailMode] = useState<'view' | 'edit' | 'create'>('view');
   const [bookingCart, setBookingCart] = useState<BookingCart>({
     items: [],
     startDate: '',
@@ -270,6 +273,17 @@ const Products = () => {
           <p className="text-gray-600 mt-1">Browse and rent equipment for your events</p>
         </div>
         <div className="flex items-center gap-2">
+          <Button 
+            onClick={() => {
+              setSelectedProduct(null);
+              setProductDetailMode('create');
+              setShowProductDetailModal(true);
+            }}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Product
+          </Button>
           <Badge variant="outline" className="text-sm">
             {sortedProducts.length} Products Available
           </Badge>
@@ -453,12 +467,18 @@ const Products = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-lg font-semibold line-clamp-1">{product.name}</CardTitle>
-                    <CardDescription className="text-sm">{product.category.name}</CardDescription>
+                    <CardDescription className="text-sm">
+                      {typeof product.category === 'object' && product.category?.name 
+                        ? product.category.name 
+                        : typeof product.category === 'string' 
+                          ? product.category 
+                          : 'Uncategorized'}
+                    </CardDescription>
                   </div>
                   <div className="flex items-center gap-1 ml-2">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span className="text-sm font-medium">{product.rating}</span>
-                    <span className="text-xs text-gray-500">({product.reviewCount})</span>
+                    <span className="text-sm font-medium">{product.rating || 0}</span>
+                    <span className="text-xs text-gray-500">({product.reviewCount || 0})</span>
                   </div>
                 </div>
               </CardHeader>
@@ -489,7 +509,7 @@ const Products = () => {
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-1">
-                  {product.tags.slice(0, 3).map((tag) => (
+                  {(product.tags || []).slice(0, 3).map((tag) => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
@@ -498,97 +518,19 @@ const Products = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>{product.name}</DialogTitle>
-                        <DialogDescription>{product.category.name}</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        {/* Product Images */}
-                        <div className="grid grid-cols-2 gap-2">
-                          {product.images.length > 0 ? (
-                            product.images.map((image) => (
-                              <img 
-                                key={image.id}
-                                src={image.url} 
-                                alt={image.altText}
-                                className="w-full h-32 object-cover rounded-lg"
-                              />
-                            ))
-                          ) : (
-                            <div className="col-span-2 h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <Package className="h-8 w-8 text-gray-400" />
-                            </div>
-                          )}
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold mb-2">Description</h4>
-                          <p className="text-sm text-gray-600">{product.description}</p>
-                        </div>
-
-                        {/* Specifications */}
-                        {product.specifications && (
-                          <div>
-                            <h4 className="font-semibold mb-2">Specifications</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {Object.entries(product.specifications).map(([key, value]) => (
-                                <div key={key} className="flex justify-between text-sm">
-                                  <span className="text-gray-600">{key}:</span>
-                                  <span className="font-medium">{value}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Pricing Details */}
-                        <div>
-                          <h4 className="font-semibold mb-2">Pricing</h4>
-                          <div className="space-y-2">
-                            <div className="flex justify-between">
-                              <span>Rental Rate:</span>
-                              <span className="font-medium">₹{product.baseRentalRate.toLocaleString()}/{product.rentalUnits}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Security Deposit:</span>
-                              <span className="font-medium">₹{product.securityDeposit.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span>Min. Rental Period:</span>
-                              <span className="font-medium">{product.minRentalDuration} {product.rentalUnits}(s)</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Availability */}
-                        <div>
-                          <h4 className="font-semibold mb-2">Availability</h4>
-                          <div className="grid grid-cols-3 gap-4 text-center">
-                            <div className="p-2 bg-green-50 rounded">
-                              <p className="text-lg font-bold text-green-600">{product.availableQuantity}</p>
-                              <p className="text-xs text-green-700">Available</p>
-                            </div>
-                            <div className="p-2 bg-yellow-50 rounded">
-                              <p className="text-lg font-bold text-yellow-600">{product.reservedQuantity}</p>
-                              <p className="text-xs text-yellow-700">Reserved</p>
-                            </div>
-                            <div className="p-2 bg-red-50 rounded">
-                              <p className="text-lg font-bold text-red-600">{product.maintenanceQuantity}</p>
-                              <p className="text-xs text-red-700">Maintenance</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => {
+                      setSelectedProduct(product);
+                      setProductDetailMode('view');
+                      setShowProductDetailModal(true);
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    View Details
+                  </Button>
 
                   <Button 
                     size="sm" 
@@ -756,6 +698,42 @@ const Products = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Product Detail Modal */}
+      <ProductDetailModal
+        open={showProductDetailModal}
+        onOpenChange={setShowProductDetailModal}
+        product={selectedProduct}
+        mode={productDetailMode}
+        onSave={async (updatedProduct) => {
+          try {
+            if (productDetailMode === 'create') {
+              // Create new product
+              await bookingService.createProduct(updatedProduct);
+              toast({
+                title: "Product Created",
+                description: "New product has been successfully created.",
+              });
+            } else if (productDetailMode === 'edit' && selectedProduct) {
+              // Update existing product
+              await bookingService.updateProduct(selectedProduct.id, updatedProduct);
+              toast({
+                title: "Product Updated",
+                description: "Product has been successfully updated.",
+              });
+            }
+            // Reload products from server
+            await loadData();
+          } catch (error) {
+            console.error('Error saving product:', error);
+            toast({
+              title: "Error",
+              description: "Failed to save product. Please try again.",
+              variant: "destructive"
+            });
+          }
+        }}
+      />
     </div>
   );
 };

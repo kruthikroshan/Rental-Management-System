@@ -5,6 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, Lock, Mail, User, Phone, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
+
+interface GoogleJwtPayload {
+  email: string;
+  name: string;
+  picture?: string;
+  sub: string;
+}
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -26,7 +35,7 @@ export default function RegisterForm() {
     hasSpecial: false
   });
   
-  const { register, isLoading } = useAuth();
+  const { register, googleLogin, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -46,6 +55,35 @@ export default function RegisterForm() {
   };
 
   const isPasswordValid = Object.values(passwordChecks).every(check => check);
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      setError('');
+      
+      if (!credentialResponse.credential) {
+        throw new Error('No credential received from Google');
+      }
+
+      // Decode the JWT token from Google
+      const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
+      
+      await googleLogin(
+        credentialResponse.credential,
+        decoded.email,
+        decoded.name,
+        decoded.picture
+      );
+      
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Google signup error:', err);
+      setError(err instanceof Error ? err.message : 'Google signup failed. Please try again.');
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google signup failed. Please try again.');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -259,6 +297,27 @@ export default function RegisterForm() {
                   'Create Account'
                 )}
               </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  theme="outline"
+                  size="large"
+                  text="signup_with"
+                  shape="rectangular"
+                />
+              </div>
 
               <div className="text-center">
                 <Link 

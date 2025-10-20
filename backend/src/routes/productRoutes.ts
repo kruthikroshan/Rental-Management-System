@@ -72,7 +72,16 @@ router.get('/available', productController.getAvailableProducts.bind(productCont
 // GET /api/products - Get all products with pagination and filtering
 router.get('/', productController.getProducts.bind(productController));
 
+// POST /api/products - Create new product
+router.post('/', productValidation, productController.createProduct.bind(productController));
+
 // GET /api/products/:id - Get single product by ID
 router.get('/:id', productController.getProduct.bind(productController));
+
+// PUT /api/products/:id - Update product
+router.put('/:id', updateProductValidation, productController.updateProduct.bind(productController));
+
+// DELETE /api/products/:id - Delete product
+router.delete('/:id', productController.deleteProduct.bind(productController));
 
 export default router;

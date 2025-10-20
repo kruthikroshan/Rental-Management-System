@@ -200,6 +200,114 @@ export class AuthController {
     }
   }
 
+  async googleLogin(req: Request, res: Response): Promise<void> {
+    try {
+      const { credential, email, name, picture } = req.body;
+
+      if (!email || !name) {
+        res.status(400).json({
+          success: false,
+          message: 'Email and name are required from Google authentication'
+        });
+        return;
+      }
+
+      // Check if user exists
+      let user = await UserModel.findOne({ 
+        email: email.toLowerCase()
+      });
+
+      if (user) {
+        // If user exists but doesn't have googleId, update it
+        if (!user.googleId && credential) {
+          user.googleId = credential;
+          user.authProvider = 'google';
+          user.isEmailVerified = true; // Google emails are verified
+          if (picture && !user.avatarUrl) {
+            user.avatarUrl = picture;
+          }
+          await user.save();
+        }
+
+        // Check if account is active
+        if (!user.isActive) {
+          res.status(403).json({
+            success: false,
+            message: 'Account is deactivated. Please contact support.'
+          });
+          return;
+        }
+      } else {
+        // Create new user with Google authentication
+        user = new UserModel({
+          name,
+          email: email.toLowerCase(),
+          googleId: credential,
+          authProvider: 'google',
+          isEmailVerified: true,
+          isActive: true,
+          role: UserRole.MANAGER, // Default role for new Google users
+          avatarUrl: picture,
+          // No password required for Google auth
+          passwordHash: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12) // Random password
+        });
+
+        await user.save();
+      }
+
+      // Update last login
+      user.lastLogin = new Date();
+      await user.save();
+
+      // Generate tokens
+      const { accessToken, refreshToken } = jwtUtils.generateTokenPair({
+        userId: String(user._id),
+        email: user.email,
+        role: user.role,
+        permissions: user.permissions
+      });
+
+      // Prepare user response
+      const userResponse = {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        avatarUrl: user.avatarUrl,
+        isActive: user.isActive,
+        isEmailVerified: user.isEmailVerified,
+        permissions: user.permissions,
+        lastLogin: user.lastLogin,
+        loginAttempts: user.loginAttempts,
+        lockUntil: user.lockUntil,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      };
+
+      res.status(200).json({
+        success: true,
+        message: user ? 'Google login successful' : 'Account created and logged in successfully',
+        data: {
+          user: userResponse,
+          tokens: {
+            accessToken,
+            refreshToken,
+            expiresIn: process.env.JWT_EXPIRES_IN || '7d'
+          }
+        }
+      });
+
+    } catch (error: any) {
+      console.error('Google login error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Google login failed',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
+      });
+    }
+  }
+
   async getProfile(req: Request, res: Response): Promise<void> {
     try {
       const userId = String(req.user?.id || '');
@@ -518,6 +626,7 @@ const authController = new AuthController();
 
 export const register = authController.register.bind(authController);
 export const login = authController.login.bind(authController);
+export const googleLogin = authController.googleLogin.bind(authController);
 export const getProfile = authController.getProfile.bind(authController);
 export const updateProfile = authController.updateProfile.bind(authController);
 export const changePassword = authController.changePassword.bind(authController);

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Settings as SettingsIcon,
   User,
@@ -29,7 +30,16 @@ import {
 } from "lucide-react";
 
 const Settings = () => {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("general");
+
+  // General Settings
+  const [generalSettings, setGeneralSettings] = useState({
+    theme: "system",
+    language: "en",
+    dateFormat: "DD/MM/YYYY",
+    timeFormat: "12"
+  });
 
   // Business Settings
   const [businessSettings, setBusinessSettings] = useState({
@@ -108,6 +118,43 @@ const Settings = () => {
     enableAuditLog: true
   });
 
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('rentalManagementSettings');
+    if (savedSettings) {
+      try {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.general) setGeneralSettings(parsed.general);
+        if (parsed.business) setBusinessSettings(parsed.business);
+        if (parsed.rental) setRentalSettings(parsed.rental);
+        if (parsed.payment) setPaymentSettings(parsed.payment);
+        if (parsed.notification) setNotificationSettings(parsed.notification);
+        if (parsed.security) setSecuritySettings(parsed.security);
+      } catch (error) {
+        console.error('Failed to load settings:', error);
+      }
+    }
+  }, []);
+
+  // Apply theme whenever it changes
+  useEffect(() => {
+    const root = document.documentElement;
+    
+    if (generalSettings.theme === 'dark') {
+      root.classList.add('dark');
+    } else if (generalSettings.theme === 'light') {
+      root.classList.remove('dark');
+    } else {
+      // System preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+  }, [generalSettings.theme]);
+
   const tabs = [
     { id: "general", label: "General", icon: SettingsIcon },
     { id: "business", label: "Business", icon: Building },
@@ -118,32 +165,161 @@ const Settings = () => {
   ];
 
   const saveSettings = () => {
-    // In real app, this would save to database
-    console.log("Saving settings...", {
-      businessSettings,
-      rentalSettings,
-      paymentSettings,
-      notificationSettings,
-      securitySettings
-    });
+    try {
+      const allSettings = {
+        general: generalSettings,
+        business: businessSettings,
+        rental: rentalSettings,
+        payment: paymentSettings,
+        notification: notificationSettings,
+        security: securitySettings
+      };
+      
+      // Save to localStorage
+      localStorage.setItem('rentalManagementSettings', JSON.stringify(allSettings));
+      
+      toast({
+        title: "Settings saved successfully!",
+        description: "Your preferences have been updated.",
+      });
+      
+      console.log("Settings saved:", allSettings);
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+      toast({
+        title: "Error saving settings",
+        description: "Failed to save your preferences. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const exportSettings = () => {
-    // In real app, this would export settings as JSON/CSV
-    const settings = {
-      business: businessSettings,
-      rental: rentalSettings,
-      payments: paymentSettings,
-      notifications: notificationSettings,
-      security: securitySettings
-    };
-    console.log("Exporting settings:", settings);
+    try {
+      const settings = {
+        general: generalSettings,
+        business: businessSettings,
+        rental: rentalSettings,
+        payment: paymentSettings,
+        notification: notificationSettings,
+        security: securitySettings
+      };
+      
+      const dataStr = JSON.stringify(settings, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `rental-settings-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      
+      toast({
+        title: "Settings exported successfully!",
+        description: "Your settings have been downloaded as a JSON file.",
+      });
+    } catch (error) {
+      console.error('Failed to export settings:', error);
+      toast({
+        title: "Error exporting settings",
+        description: "Failed to export your settings. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const resetToDefaults = () => {
-    // In real app, this would reset to default settings
-    console.log("Resetting to default settings");
+    if (confirm("Are you sure you want to reset all settings to defaults? This action cannot be undone.")) {
+      // Reset to initial values
+      setGeneralSettings({
+        theme: "system",
+        language: "en",
+        dateFormat: "DD/MM/YYYY",
+        timeFormat: "12"
+      });
+      
+      setBusinessSettings({
+        businessName: "My Rental Business",
+        businessAddress: "",
+        phone: "",
+        email: "",
+        website: "",
+        gstNumber: "",
+        currency: "INR",
+        timezone: "Asia/Kolkata",
+        businessHours: {
+          monday: { isOpen: true, open: "09:00", close: "18:00" },
+          tuesday: { isOpen: true, open: "09:00", close: "18:00" },
+          wednesday: { isOpen: true, open: "09:00", close: "18:00" },
+          thursday: { isOpen: true, open: "09:00", close: "18:00" },
+          friday: { isOpen: true, open: "09:00", close: "18:00" },
+          saturday: { isOpen: true, open: "09:00", close: "14:00" },
+          sunday: { isOpen: false, open: "09:00", close: "18:00" }
+        }
+      });
+      
+      setRentalSettings({
+        defaultRentalPeriod: 1,
+        minimumRentalPeriod: 1,
+        maximumRentalPeriod: 30,
+        securityDepositPercentage: 20,
+        lateFeePercentage: 5,
+        cancellationWindow: 24,
+        advanceBookingDays: 60,
+        autoConfirmBookings: false,
+        requireSecurityDeposit: true,
+        allowPartialPayments: true,
+        enableDeliveryCharges: true,
+        baseDeliveryCharge: 500
+      });
+      
+      setPaymentSettings({
+        enableOnlinePayments: true,
+        enableCashPayments: true,
+        enableCardPayments: true,
+        enableUPI: true,
+        enableNetBanking: true,
+        razorpayKeyId: "",
+        stripePublishableKey: "",
+        paymentGateway: "razorpay",
+        autoGenerateInvoices: true,
+        sendPaymentReminders: true,
+        reminderDaysBefore: 2
+      });
+      
+      setNotificationSettings({
+        emailNotifications: true,
+        smsNotifications: true,
+        pushNotifications: true,
+        bookingConfirmations: true,
+        paymentReminders: true,
+        returnReminders: true,
+        maintenanceAlerts: true,
+        inventoryAlerts: true,
+        lowStockThreshold: 5
+      });
+      
+      setSecuritySettings({
+        twoFactorAuth: false,
+        passwordExpiry: 90,
+        sessionTimeout: 30,
+        loginAttempts: 5,
+        requireStrongPasswords: true,
+        allowRememberMe: true,
+        apiRateLimit: 100,
+        enableAuditLog: true
+      });
+      
+      // Clear localStorage
+      localStorage.removeItem('rentalManagementSettings');
+      
+      toast({
+        title: "Settings reset to defaults",
+        description: "All settings have been restored to their default values.",
+      });
+    }
   };
+
 
   return (
     <Layout>
@@ -212,7 +388,12 @@ const Settings = () => {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="theme">Theme</Label>
-                      <select id="theme" className="w-full px-3 py-2 border rounded-md">
+                      <select 
+                        id="theme" 
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={generalSettings.theme}
+                        onChange={(e) => setGeneralSettings(prev => ({ ...prev, theme: e.target.value }))}
+                      >
                         <option value="light">Light</option>
                         <option value="dark">Dark</option>
                         <option value="system">System</option>
@@ -220,7 +401,12 @@ const Settings = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="language">Language</Label>
-                      <select id="language" className="w-full px-3 py-2 border rounded-md">
+                      <select 
+                        id="language" 
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={generalSettings.language}
+                        onChange={(e) => setGeneralSettings(prev => ({ ...prev, language: e.target.value }))}
+                      >
                         <option value="en">English</option>
                         <option value="hi">Hindi</option>
                         <option value="mr">Marathi</option>
@@ -231,7 +417,12 @@ const Settings = () => {
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="dateFormat">Date Format</Label>
-                      <select id="dateFormat" className="w-full px-3 py-2 border rounded-md">
+                      <select 
+                        id="dateFormat" 
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={generalSettings.dateFormat}
+                        onChange={(e) => setGeneralSettings(prev => ({ ...prev, dateFormat: e.target.value }))}
+                      >
                         <option value="DD/MM/YYYY">DD/MM/YYYY</option>
                         <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                         <option value="YYYY-MM-DD">YYYY-MM-DD</option>
@@ -239,7 +430,12 @@ const Settings = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="timeFormat">Time Format</Label>
-                      <select id="timeFormat" className="w-full px-3 py-2 border rounded-md">
+                      <select 
+                        id="timeFormat" 
+                        className="w-full px-3 py-2 border rounded-md"
+                        value={generalSettings.timeFormat}
+                        onChange={(e) => setGeneralSettings(prev => ({ ...prev, timeFormat: e.target.value }))}
+                      >
                         <option value="12">12 Hour</option>
                         <option value="24">24 Hour</option>
                       </select>

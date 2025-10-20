@@ -38,6 +38,8 @@ export interface IUser extends Document {
   loginAttempts: number;
   lockUntil?: Date;
   permissions: UserPermission[];
+  googleId?: string;
+  authProvider?: 'local' | 'google';
   createdAt: Date;
   updatedAt: Date;
   
@@ -65,13 +67,25 @@ const UserSchema = new Schema<IUser>(
     },
     passwordHash: {
       type: String,
-      required: true,
+      required: function() {
+        return this.authProvider === 'local' || !this.authProvider;
+      },
       select: false,
     },
     role: {
       type: String,
       enum: Object.values(UserRole),
       default: UserRole.CUSTOMER,
+    },
+    googleId: {
+      type: String,
+      sparse: true,
+      unique: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
     },
     phone: {
       type: String,
