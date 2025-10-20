@@ -4,6 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Download, 
   Calendar, 
@@ -56,8 +62,132 @@ const Reports = () => {
   ];
 
   const exportReport = (format: string) => {
-    // In real app, this would generate and download the report
-    console.log(`Exporting ${reportType} report in ${format} format for ${dateRange}`);
+    // Generate report data based on current filters
+    const reportData = {
+      reportType,
+      dateRange,
+      generatedAt: new Date().toISOString(),
+      kpis: revenueData,
+      topProducts,
+      topCustomers,
+      monthlyData
+    };
+
+    if (format === 'pdf') {
+      // For PDF, create a formatted HTML representation
+      const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${reportType.toUpperCase()} Report - ${dateRange}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #333; }
+            table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background-color: #f4f4f4; font-weight: bold; }
+            .kpi { display: inline-block; margin: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+          </style>
+        </head>
+        <body>
+          <h1>Reports & Analytics</h1>
+          <p><strong>Report Type:</strong> ${reportType}</p>
+          <p><strong>Date Range:</strong> ${dateRange}</p>
+          <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
+          
+          <h2>Key Performance Indicators</h2>
+          <div>
+            <div class="kpi"><strong>Total Revenue:</strong> ${revenueData.totalRevenue}</div>
+            <div class="kpi"><strong>Total Orders:</strong> ${revenueData.totalOrders}</div>
+            <div class="kpi"><strong>Avg Order Value:</strong> ${revenueData.averageOrderValue}</div>
+          </div>
+
+          <h2>Top Products</h2>
+          <table>
+            <tr><th>Product</th><th>Rentals</th><th>Revenue</th><th>Utilization</th></tr>
+            ${topProducts.map(p => `<tr><td>${p.name}</td><td>${p.rentals}</td><td>${p.revenue}</td><td>${p.utilization}</td></tr>`).join('')}
+          </table>
+
+          <h2>Top Customers</h2>
+          <table>
+            <tr><th>Customer</th><th>Orders</th><th>Total Spent</th><th>Last Order</th></tr>
+            ${topCustomers.map(c => `<tr><td>${c.name}</td><td>${c.orders}</td><td>${c.totalSpent}</td><td>${c.lastOrder}</td></tr>`).join('')}
+          </table>
+        </body>
+        </html>
+      `;
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report-${reportType}-${dateRange}-${Date.now()}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+    } else if (format === 'excel' || format === 'csv') {
+      // For Excel/CSV, create tab-separated data
+      const separator = format === 'csv' ? ',' : '\t';
+      let csvContent = `${reportType.toUpperCase()} Report - ${dateRange}\n\n`;
+      
+      // KPIs
+      csvContent += `Key Performance Indicators\n`;
+      csvContent += `Metric${separator}Value\n`;
+      csvContent += `Total Revenue${separator}${revenueData.totalRevenue}\n`;
+      csvContent += `Monthly Growth${separator}${revenueData.monthlyGrowth}\n`;
+      csvContent += `Average Order Value${separator}${revenueData.averageOrderValue}\n`;
+      csvContent += `Total Orders${separator}${revenueData.totalOrders}\n\n`;
+      
+      // Top Products
+      csvContent += `Top Products\n`;
+      csvContent += `Product Name${separator}Rentals${separator}Revenue${separator}Utilization\n`;
+      topProducts.forEach(p => {
+        csvContent += `${p.name}${separator}${p.rentals}${separator}${p.revenue}${separator}${p.utilization}\n`;
+      });
+      csvContent += '\n';
+      
+      // Top Customers
+      csvContent += `Top Customers\n`;
+      csvContent += `Customer Name${separator}Orders${separator}Total Spent${separator}Last Order\n`;
+      topCustomers.forEach(c => {
+        csvContent += `${c.name}${separator}${c.orders}${separator}${c.totalSpent}${separator}${c.lastOrder}\n`;
+      });
+      csvContent += '\n';
+      
+      // Monthly Data
+      csvContent += `Monthly Data\n`;
+      csvContent += `Month${separator}Revenue${separator}Orders${separator}Customers\n`;
+      monthlyData.forEach(m => {
+        csvContent += `${m.month}${separator}${m.revenue}${separator}${m.orders}${separator}${m.customers}\n`;
+      });
+      
+      const blob = new Blob([csvContent], { type: format === 'csv' ? 'text/csv' : 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report-${reportType}-${dateRange}-${Date.now()}.${format}`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+    } else {
+      // JSON export
+      const jsonStr = JSON.stringify(reportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report-${reportType}-${dateRange}-${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+    
+    console.log(`✅ Exported ${reportType} report in ${format} format for ${dateRange}`);
   };
 
   return (
@@ -76,10 +206,28 @@ const Reports = () => {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button className="bg-primary hover:bg-primary/90">
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportReport('pdf')}>
+                  <FileText className="w-4 h-4 mr-2 text-red-500" />
+                  Export as PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportReport('excel')}>
+                  <BarChart3 className="w-4 h-4 mr-2 text-green-500" />
+                  Export as Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportReport('csv')}>
+                  <Download className="w-4 h-4 mr-2 text-blue-500" />
+                  Export as CSV
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
