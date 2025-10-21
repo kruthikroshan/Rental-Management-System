@@ -1,4 +1,4 @@
-Video Link: https://drive.google.com/file/d/1Hj2GwMQCALL70pMIT0PPIPMgvZSdMibc/view?usp=drive_link
+Video Link: 
 
 # Rental Management System - Comprehensive Solution
 
