@@ -5,13 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2 } from 'lucide-react';
+import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
+
+interface GoogleJwtPayload {
+  email: string;
+  name: string;
+  picture?: string;
+  sub: string;
+}
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login, isLoading, isAuthenticated, user } = useAuth();
+  const { login, googleLogin, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect to dashboard if already authenticated
@@ -20,6 +29,35 @@ export default function LoginForm() {
       navigate('/dashboard');
     }
   }, [isAuthenticated, user, navigate]);
+
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      setError('');
+      
+      if (!credentialResponse.credential) {
+        throw new Error('No credential received from Google');
+      }
+
+      // Decode the JWT token from Google
+      const decoded = jwtDecode<GoogleJwtPayload>(credentialResponse.credential);
+      
+      await googleLogin(
+        credentialResponse.credential,
+        decoded.email,
+        decoded.name,
+        decoded.picture
+      );
+      
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Google login error:', err);
+      setError(err instanceof Error ? err.message : 'Google login failed. Please try again.');
+    }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google login failed. Please try again.');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +161,27 @@ export default function LoginForm() {
                   'Sign In'
                 )}
               </Button>
+
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  useOneTap
+                  theme="outline"
+                  size="large"
+                  text="signin_with"
+                  shape="rectangular"
+                />
+              </div>
 
               <div className="text-center">
                 <Link 

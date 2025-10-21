@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -36,6 +37,9 @@ interface BookingCart {
 }
 
 const Products = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,7 +64,6 @@ const Products = () => {
     startDate: '',
     endDate: ''
   });
-  const { toast } = useToast();
 
   useEffect(() => {
     loadData();
@@ -135,15 +138,23 @@ const Products = () => {
   });
 
   const addToCart = (product: Product, quantity: number = 1, duration: number = 1) => {
+    console.log('addToCart called with:', { product: product.name, quantity, duration });
+    console.log('Current bookingDates:', bookingDates);
+    console.log('Current cart items:', bookingCart.items.length);
+    
     if (!bookingDates.startDate || !bookingDates.endDate) {
+      console.log('Dates not selected, showing error');
       toast({
-        title: "Select Dates",
-        description: "Please select booking dates first.",
+        title: "Select Dates First",
+        description: "Please select booking start and end dates at the top of the page before adding items to cart.",
         variant: "destructive"
       });
+      // Scroll to the date picker section
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
+    console.log('Dates are valid, proceeding to add to cart');
     const existingItemIndex = bookingCart.items.findIndex(item => item.productId === product.id);
     
     if (existingItemIndex >= 0) {
@@ -155,8 +166,8 @@ const Products = () => {
         productId: product.id,
         productName: product.name,
         productSku: product.sku,
-        productImage: product.images[0]?.url,
-        category: product.category.name,
+        productImage: product.images?.[0]?.url || '',
+        category: product.category?.name || 'Uncategorized',
         quantity,
         unitRate: product.baseRentalRate,
         duration,
@@ -173,6 +184,9 @@ const Products = () => {
       }));
     }
 
+    console.log('Item added to cart successfully');
+    console.log('New cart state:', bookingCart.items.length + 1, 'items');
+    
     toast({
       title: "Added to Cart",
       description: `${product.name} has been added to your booking cart.`,
@@ -210,6 +224,58 @@ const Products = () => {
     return bookingCart.items.reduce((total, item) => {
       return total + (item.securityDepositPerUnit * item.quantity);
     }, 0);
+  };
+
+  const handleProceedToBooking = () => {
+    console.log('=== PROCEED TO BOOKING CLICKED ===');
+    console.log('Cart data:', bookingCart);
+    console.log('Cart items count:', bookingCart.items.length);
+    console.log('Navigate function exists:', typeof navigate === 'function');
+    
+    if (bookingCart.items.length === 0) {
+      console.log('Cart is empty, showing error');
+      toast({
+        title: "Cart is Empty",
+        description: "Please add items to your cart before proceeding.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Store cart data in localStorage to pass to booking wizard
+      console.log('Storing cart data in localStorage...');
+      localStorage.setItem('bookingCartData', JSON.stringify(bookingCart));
+      console.log('Cart data stored successfully');
+      
+      console.log('Attempting navigation to /bookings/new...');
+      
+      // Navigate to booking wizard
+      navigate('/bookings/new', { 
+        state: { 
+          cartData: bookingCart 
+        } 
+      });
+      
+      console.log('Navigation called successfully');
+      
+      // Close the cart dialog
+      setShowCartDialog(false);
+      
+      toast({
+        title: "Redirecting to Booking",
+        description: "Creating your booking order...",
+      });
+      
+      console.log('=== PROCEED TO BOOKING COMPLETED ===');
+    } catch (error) {
+      console.error('Error in handleProceedToBooking:', error);
+      toast({
+        title: "Navigation Error",
+        description: "Failed to proceed to booking. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleAddToWishlist = (product: Product) => {
@@ -303,13 +369,21 @@ const Products = () => {
       </div>
 
       {/* Booking Dates Selection */}
-      <Card>
+      <Card className={(!bookingDates.startDate || !bookingDates.endDate) ? "border-2 border-orange-400 shadow-lg" : ""}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
             Select Booking Dates
+            {(!bookingDates.startDate || !bookingDates.endDate) && (
+              <Badge variant="destructive" className="ml-2">Required</Badge>
+            )}
           </CardTitle>
-          <CardDescription>Choose your rental period to check availability and pricing</CardDescription>
+          <CardDescription>
+            Choose your rental period to check availability and pricing
+            {(!bookingDates.startDate || !bookingDates.endDate) && (
+              <span className="text-orange-600 font-medium"> - You must select dates before adding items to cart</span>
+            )}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -535,11 +609,21 @@ const Products = () => {
                   <Button 
                     size="sm" 
                     className="flex-1"
-                    onClick={() => addToCart(product)}
+                    onClick={() => {
+                      console.log('Add to Cart clicked for:', product.name);
+                      console.log('Booking dates:', bookingDates);
+                      addToCart(product);
+                    }}
                     disabled={product.availableQuantity === 0}
+                    variant={(!bookingDates.startDate || !bookingDates.endDate) ? "outline" : "default"}
                   >
                     <ShoppingCart className="h-4 w-4 mr-1" />
-                    Add to Cart
+                    {product.availableQuantity === 0 
+                      ? 'Out of Stock' 
+                      : (!bookingDates.startDate || !bookingDates.endDate) 
+                        ? 'Select Dates First' 
+                        : 'Add to Cart'
+                    }
                   </Button>
                 </div>
               </CardContent>
@@ -690,7 +774,13 @@ const Products = () => {
               Continue Shopping
             </Button>
             {bookingCart.items.length > 0 && (
-              <Button className="bg-green-600 hover:bg-green-700">
+              <Button 
+                className="bg-green-600 hover:bg-green-700"
+                onClick={(e) => {
+                  console.log('Proceed to Booking button clicked!', e);
+                  handleProceedToBooking();
+                }}
+              >
                 <CheckCircle className="h-4 w-4 mr-2" />
                 Proceed to Booking
               </Button>
