@@ -23,8 +23,16 @@ import Reports from "./pages/Reports";
 import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 import UserProfile from "./pages/UserProfile";
+import CustomerPortal from "./pages/CustomerPortal";
 import NotFound from "./pages/NotFound";
 import BookingWizard from "./components/BookingWizard/BookingWizard";
+
+// Import new admin feature pages
+import RoleManagement from "./pages/RoleManagement";
+import MaintenanceTracking from "./pages/MaintenanceTracking";
+import InventoryAnalytics from "./pages/InventoryAnalytics";
+import TaxCommissionManagement from "./pages/TaxCommissionManagement";
+import FeedbackRatingDashboard from "./pages/FeedbackRatingDashboard";
 
 const queryClient = new QueryClient();
 
@@ -163,6 +171,56 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <UserProfile />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/portal" 
+              element={
+                <ProtectedRoute>
+                  <CustomerPortal />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* New Admin Features */}
+            <Route 
+              path="/admin/roles" 
+              element={
+                <ProtectedRoute>
+                  <RoleManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/maintenance" 
+              element={
+                <ProtectedRoute>
+                  <MaintenanceTracking />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/inventory-analytics" 
+              element={
+                <ProtectedRoute>
+                  <InventoryAnalytics />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/tax-commission" 
+              element={
+                <ProtectedRoute>
+                  <TaxCommissionManagement />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/feedback" 
+              element={
+                <ProtectedRoute>
+                  <FeedbackRatingDashboard />
                 </ProtectedRoute>
               } 
             />
