@@ -153,7 +153,10 @@ export function Header({ onLogout, user, onMenuClick, isMobile }: HeaderProps) {
                     <Button
                       variant="ghost"
                       className="w-full justify-start text-left"
-                      onClick={() => setIsUserMenuOpen(false)}
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        window.location.href = '/profile';
+                      }}
                     >
                       <UserCircle className="w-4 h-4 mr-2" />
                       Profile
@@ -161,7 +164,10 @@ export function Header({ onLogout, user, onMenuClick, isMobile }: HeaderProps) {
                     <Button
                       variant="ghost"
                       className="w-full justify-start text-left"
-                      onClick={() => setIsUserMenuOpen(false)}
+                      onClick={() => {
+                        setIsUserMenuOpen(false);
+                        window.location.href = '/settings';
+                      }}
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
