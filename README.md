@@ -259,4 +259,4 @@ This project is part of the Odoo Final Round assessment.
 
 ## 👨‍💻 Author
 
-**Nikhil** - [GitHub Profile](https://github.com/Nikhil18N)
+**Kruthik Roshan** - [GitHub Profile](https://github.com/kruthikroshan)
