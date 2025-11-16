@@ -33,12 +33,25 @@ export class AuthController {
         return;
       }
 
+      // Validate and sanitize phone - only accept if it looks like a phone number
+      let validPhone: string | undefined = undefined;
+      if (phone && typeof phone === 'string') {
+        const cleanPhone = phone.trim();
+        // Only accept if it's not an email and has reasonable length
+        if (cleanPhone.length > 0 && 
+            cleanPhone.length <= 20 && 
+            !cleanPhone.includes('@') && 
+            /^[\d\s\+\-\(\)]+$/.test(cleanPhone)) {
+          validPhone = cleanPhone;
+        }
+      }
+
       // Hash password
-      console.log('Creating user with data:', { name, email, phone, role });
+      console.log('Creating user with data:', { name, email, phone: validPhone, role });
       const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
-      // Create user - only include phone if it's provided and valid
+      // Create user - only include phone if it's valid
       const userData: any = {
         name,
         email,
@@ -47,9 +60,9 @@ export class AuthController {
         role: role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.MANAGER
       };
 
-      // Only add phone if it's provided and not empty
-      if (phone && phone.trim().length > 0) {
-        userData.phone = phone.trim();
+      // Only add phone if it's valid
+      if (validPhone) {
+        userData.phone = validPhone;
       }
 
       const user = new UserModel(userData);
