@@ -105,12 +105,9 @@ const corsOptions = {
       );
     }
     
-    console.log('CORS Origin Check:', { origin, allowedOrigins });
-    
     // Allow requests with no origin (same-origin requests, direct navigation, curl, Postman, etc.)
     // These are safe because they can't read the response from JavaScript in a browser context
     if (!origin) {
-      console.log('CORS: Allowing request with no origin (same-origin or direct request)');
       return callback(null, true);
     }
     
@@ -118,19 +115,15 @@ const corsOptions = {
     if (process.env.NODE_ENV !== 'production') {
       if (origin.includes('localhost') || origin.includes('127.0.0.1') || 
           origin.match(/http:\/\/(?:192\.168|10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)/)) {
-        console.log('CORS: Development - allowing local network origin:', origin);
         return callback(null, true);
       }
     }
     
     // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
-      console.log('CORS: Origin allowed:', origin);
       callback(null, true);
     } else {
-      console.error('CORS Error: Origin not allowed:', origin);
-      console.error('Allowed origins:', allowedOrigins);
-      console.error('Received origin:', origin);
+      console.error('CORS Error: Origin not allowed:', origin, 'Allowed:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
