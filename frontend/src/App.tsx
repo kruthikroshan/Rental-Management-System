@@ -10,6 +10,7 @@ import RegisterForm from "@/components/auth/RegisterForm";
 
 // Import existing pages
 import Index from "./pages/Index.tsx";
+import HomePage from "./pages/HomePage";
 import Products from "./pages/Products";
 import Bookings from "./pages/Bookings";
 import Customers from "./pages/Customers";
@@ -50,6 +51,7 @@ const App = () => (
         >
           <Routes>
             {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginForm />} />
             <Route path="/register" element={<RegisterForm />} />
             
