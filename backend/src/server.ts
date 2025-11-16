@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { initializeDatabase } from './config/database';
+import { validateEnv } from './config/env';
 import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboardRoutes';
 import productRoutes from './routes/productRoutes';
@@ -15,6 +16,14 @@ import recommendationRoutes from './routes/recommendationRoutes';
 
 // Load environment variables
 dotenv.config();
+
+// Validate environment configuration
+try {
+  validateEnv();
+} catch (error) {
+  console.error('Failed to start server due to environment configuration errors');
+  process.exit(1);
+}
 
 // Create Express app
 const app = express();
@@ -80,26 +89,32 @@ if (process.env.NODE_ENV === 'production') {
 // CORS configuration
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:5174',  // Added for Vite auto-port switching
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:5174',  // Added for Vite auto-port switching
-      'http://127.0.0.1:3000'
-    ];
+    // Get allowed origins from environment variable or use defaults
+    const allowedOriginsEnv = process.env.ALLOWED_ORIGINS || '';
+    const allowedOrigins = allowedOriginsEnv.split(',').map(o => o.trim()).filter(Boolean);
+    
+    // Add default development origins if in dev mode
+    if (process.env.NODE_ENV !== 'production') {
+      allowedOrigins.push(
+        'http://localhost:5173',
+        'http://localhost:5174',
+        'http://localhost:3000',
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
+        'http://127.0.0.1:3000'
+      );
+    }
     
     console.log('CORS Origin Check:', { origin, allowedOrigins });
     
-    // In development mode, allow all local network IPs
-    if (process.env.NODE_ENV !== 'production') {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      if (!origin) {
-        console.log('Allowing request with no origin (development mode)');
-        return callback(null, true);
-      }
-      
-      // Allow all localhost and local network requests in development
+    // In development mode, allow requests with no origin (mobile apps, Postman, etc.)
+    if (process.env.NODE_ENV !== 'production' && !origin) {
+      console.log('Allowing request with no origin (development mode)');
+      return callback(null, true);
+    }
+    
+    // In development, allow local network requests
+    if (process.env.NODE_ENV !== 'production' && origin) {
       if (origin.includes('localhost') || origin.includes('127.0.0.1') || 
           origin.match(/http:\/\/(?:192\.168|10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)/)) {
         console.log('CORS: Development - allowing local network origin:', origin);
@@ -107,6 +122,7 @@ const corsOptions = {
       }
     }
     
+    // Check if origin is in allowed list
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       console.log('CORS: Origin allowed:', origin);
       callback(null, true);
@@ -127,46 +143,15 @@ const corsOptions = {
     'Pragma'
   ],
   exposedHeaders: ['Set-Cookie'],
-  optionsSuccessStatus: 200, // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200,
   preflightContinue: false
 };
 
 app.use(cors(corsOptions));
 
-// Additional CORS middleware to ensure headers are always set
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',  // Added for Vite auto-port switching
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',  // Added for Vite auto-port switching
-    'http://127.0.0.1:3000'
-  ];
-  
-  if (!origin || allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin || '*');
-  }
-  
-  res.header('Access-Control-Allow-Credentials', 'true');
-  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, Pragma');
-  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    console.log('Handling preflight request for:', req.url);
-    res.status(200).end();
-    return;
-  }
-  
-  next();
-});
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing middleware with size limits
+app.use(express.json({ limit: process.env.MAX_REQUEST_SIZE || '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: process.env.MAX_REQUEST_SIZE || '10mb' }));
 
 // API Routes
 app.use('/api/auth', authRoutes);

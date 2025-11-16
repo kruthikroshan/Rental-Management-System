@@ -27,10 +27,31 @@ class JwtUtils {
   private readonly refreshExpiresIn: string;
 
   constructor() {
-    this.jwtSecret = process.env.JWT_SECRET || 'fallback-jwt-secret-key-for-development';
+    // Validate JWT secrets exist and are strong enough
+    this.jwtSecret = process.env.JWT_SECRET || '';
     this.jwtExpiresIn = process.env.JWT_EXPIRES_IN || '7d';
-    this.refreshSecret = process.env.JWT_REFRESH_SECRET || 'fallback-refresh-secret-key-for-development';
+    this.refreshSecret = process.env.JWT_REFRESH_SECRET || '';
     this.refreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN || '30d';
+
+    // Security check: Ensure secrets are set in production
+    if (process.env.NODE_ENV === 'production') {
+      if (!this.jwtSecret || this.jwtSecret.length < 32) {
+        throw new Error('JWT_SECRET must be set and at least 32 characters long in production');
+      }
+      if (!this.refreshSecret || this.refreshSecret.length < 32) {
+        throw new Error('JWT_REFRESH_SECRET must be set and at least 32 characters long in production');
+      }
+    }
+
+    // Development fallback with warning
+    if (!this.jwtSecret) {
+      console.warn('⚠️  WARNING: Using default JWT_SECRET. This is insecure for production!');
+      this.jwtSecret = 'development-jwt-secret-key-change-in-production';
+    }
+    if (!this.refreshSecret) {
+      console.warn('⚠️  WARNING: Using default JWT_REFRESH_SECRET. This is insecure for production!');
+      this.refreshSecret = 'development-refresh-secret-key-change-in-production';
+    }
   }
 
   /**

@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+build
 
 # Environment variables
 .env
@@ -44,3 +45,32 @@ backend/.env.production.local
 *.njsproj
 *.sln
 *.sw?
+
+# OS files
+Thumbs.db
+*.bak
+*.swp
+*~
+
+# Package manager
+.pnpm-debug.log
+.yarn-integrity
+.npm
+
+# Testing
+coverage
+.nyc_output
+*.lcov
+
+# Temporary files
+*.tmp
+temp/
+tmp/
+
+# PM2
+.pm2
+pm2.log
+
+# Misc
+.cache
+.parcel-cache
