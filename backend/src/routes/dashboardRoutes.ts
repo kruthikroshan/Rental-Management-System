@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { DashboardController } from '../controllers/dashboardController.mongo';
+import { DashboardController } from '../controllers/dashboardController';
 import { authenticate, authorize } from '../middleware/auth';
 
 const router = Router();

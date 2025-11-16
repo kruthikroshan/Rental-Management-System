@@ -19,11 +19,44 @@ dotenv.config();
 // Create Express app
 const app = express();
 
-// Security middleware
+// Security middleware - Helmet for secure HTTP headers
 app.use(helmet({
+  // Allow cross-origin requests for frontend
   crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: false, // Disable CSP for development
-  xssFilter: false, // Disable X-XSS-Protection as it's deprecated
+  
+  // Content Security Policy - customize based on your needs
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  } : false, // Disable CSP in development for easier debugging
+  
+  // Prevent clickjacking attacks
+  frameguard: { action: 'deny' },
+  
+  // Hide X-Powered-By header
+  hidePoweredBy: true,
+  
+  // HSTS - Force HTTPS in production
+  hsts: process.env.NODE_ENV === 'production' ? {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true
+  } : false,
+  
+  // Prevent MIME type sniffing
+  noSniff: true,
+  
+  // Referrer policy
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
 }));
 
 // Rate limiting - more lenient for development
@@ -58,10 +91,20 @@ const corsOptions = {
     
     console.log('CORS Origin Check:', { origin, allowedOrigins });
     
-    // Allow requests with no origin (like mobile apps or curl requests) in development
-    if (!origin && process.env.NODE_ENV === 'development') {
-      console.log('Allowing request with no origin (development mode)');
-      return callback(null, true);
+    // In development mode, allow all local network IPs
+    if (process.env.NODE_ENV !== 'production') {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
+        console.log('Allowing request with no origin (development mode)');
+        return callback(null, true);
+      }
+      
+      // Allow all localhost and local network requests in development
+      if (origin.includes('localhost') || origin.includes('127.0.0.1') || 
+          origin.match(/http:\/\/(?:192\.168|10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)/)) {
+        console.log('CORS: Development - allowing local network origin:', origin);
+        return callback(null, true);
+      }
     }
     
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
@@ -231,12 +274,13 @@ const PORT = parseInt(process.env.PORT || '3000');
 // Start server after database initialization
 async function startServer() {
   try {
-    // Initialize database first
+    // Initialize database in background (non-blocking)
     console.log('🔄 Initializing database connection...');
-    await initializeDatabase();
-    console.log('✅ Database initialization completed');
+    initializeDatabase()
+      .then(() => console.log('✅ Database connected successfully'))
+      .catch(err => console.log('❌ MongoDB connection failed:', err.message));
     
-    // Start the HTTP server
+    // Start the HTTP server immediately (don't wait for DB)
     console.log('🔄 Starting HTTP server...');
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Backend server running on http://localhost:${PORT}`);

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import rateLimit from 'express-rate-limit';
 import { UserModel, IUser, UserPermission } from '../models/User.model';
 import { jwtUtils, JwtPayload } from '../utils/jwt';
 
@@ -185,16 +186,20 @@ export const resourceOwnerOrAdmin = (userIdField: string = 'userId') => {
 
 /**
  * Rate limiting middleware for authentication routes
+ * Prevents brute force attacks on login, register, and password reset
  */
-export const authRateLimit = (req: Request, res: Response, next: NextFunction): void => {
-  // This would typically use a rate limiting library like express-rate-limit
-  // For now, we'll implement a basic version
-  const clientIp = req.ip || req.connection.remoteAddress;
-  
-  // In production, you'd use Redis or similar to track attempts
-  // For demo purposes, we'll skip the actual implementation
-  next();
-};
+export const authRateLimit = rateLimit({
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes default
+  max: parseInt(process.env.RATE_LIMIT_AUTH_MAX || '5'), // 5 attempts per window
+  message: {
+    success: false,
+    message: 'Too many authentication attempts from this IP, please try again after 15 minutes.'
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  skipSuccessfulRequests: false, // Count successful requests
+  skip: (req) => process.env.NODE_ENV === 'development', // Skip in development mode
+});
 
 /**
  * Middleware to validate refresh token

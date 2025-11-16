@@ -104,6 +104,16 @@ export class AuthController {
 
       const { email, password } = req.body;
 
+      // Check MongoDB connection status
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState !== 1) {
+        res.status(503).json({
+          success: false,
+          message: 'Database connection unavailable. Please try again later.'
+        });
+        return;
+      }
+
       // Find user with password using Mongoose
       const user = await UserModel.findOne({ 
         email: email.toLowerCase(), 
@@ -208,6 +218,16 @@ export class AuthController {
         res.status(400).json({
           success: false,
           message: 'Email and name are required from Google authentication'
+        });
+        return;
+      }
+
+      // Check MongoDB connection status
+      const mongoose = require('mongoose');
+      if (mongoose.connection.readyState !== 1) {
+        res.status(503).json({
+          success: false,
+          message: 'Database connection unavailable. Please try again later.'
         });
         return;
       }
