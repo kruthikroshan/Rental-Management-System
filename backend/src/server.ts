@@ -129,6 +129,8 @@ const corsOptions = {
       callback(null, true);
     } else {
       console.error('CORS Error: Origin not allowed:', origin);
+      console.error('Allowed origins:', allowedOrigins);
+      console.error('Received origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
