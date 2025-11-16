@@ -1,5 +1,4 @@
 import jwt from 'jsonwebtoken';
-import { User } from '../entities/User';
 
 export interface JwtPayload {
   userId: string;
@@ -189,14 +188,14 @@ class JwtUtils {
   }
 
   /**
-   * Generate token from user entity
+   * Generate token from user data
    */
-  generateTokenPairFromUser(user: User): TokenPair {
+  generateTokenPairFromUser(user: any): TokenPair {
     const userData: UserTokenData = {
-      userId: user.id.toString(),
+      userId: user.id?.toString() || user._id?.toString(),
       email: user.email,
       role: user.role,
-      permissions: user.permissions
+      permissions: user.permissions || []
     };
 
     return this.generateTokenPair(userData);

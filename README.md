@@ -4,6 +4,18 @@ Video Link:
 
 A full-featured rental management application built with modern web technologies for efficient property and booking management. This system streamlines the entire rental process from quotation to return, with integrated payment processing and automated workflows.
 
+## 🚀 Quick Deploy
+
+[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/kruthikroshan/Rental-Management-System&project-name=rental-management&repository-name=rental-management&root-directory=frontend&env=VITE_API_BASE_URL,VITE_GOOGLE_CLIENT_ID)
+
+**Deployment Guide**: See [VERCEL_RENDER_DEPLOYMENT.md](./VERCEL_RENDER_DEPLOYMENT.md) for complete instructions
+
+- **Frontend**: Vercel (recommended)
+- **Backend**: Render (recommended)
+- **Database**: MongoDB Atlas
+
+---
+
 ## 🎯 **Core Rental Features**
 
 ### **1. Rental Product Management**

@@ -113,7 +113,7 @@ export class CustomerController {
       
       // Remove password from response
       const customerResponse = customer.toJSON();
-      delete customerResponse.password;
+      delete (customerResponse as any).passwordHash;
 
       res.status(201).json({
         success: true,

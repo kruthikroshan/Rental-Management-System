@@ -6,4 +6,4 @@ export * from './Product.model';
 export * from './BookingOrder.model';
 export * from './Quotation.model';
 export * from './Payment.model';
-export * from './enums';
+// Note: enums are already exported from User.model, no need to re-export
