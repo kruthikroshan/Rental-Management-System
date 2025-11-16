@@ -38,15 +38,21 @@ export class AuthController {
       const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
-      // Create user
-      const user = new UserModel({
+      // Create user - only include phone if it's provided and valid
+      const userData: any = {
         name,
         email,
         passwordHash,
-        phone,
         // For demo purposes, make new users managers to access all features
         role: role === UserRole.ADMIN ? UserRole.ADMIN : UserRole.MANAGER
-      });
+      };
+
+      // Only add phone if it's provided and not empty
+      if (phone && phone.trim().length > 0) {
+        userData.phone = phone.trim();
+      }
+
+      const user = new UserModel(userData);
 
       console.log('User created, saving to database...');
       await user.save();
