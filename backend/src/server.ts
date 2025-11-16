@@ -107,14 +107,15 @@ const corsOptions = {
     
     console.log('CORS Origin Check:', { origin, allowedOrigins });
     
-    // In development mode, allow requests with no origin (mobile apps, Postman, etc.)
-    if (process.env.NODE_ENV !== 'production' && !origin) {
-      console.log('Allowing request with no origin (development mode)');
+    // Allow requests with no origin (same-origin requests, direct navigation, curl, Postman, etc.)
+    // These are safe because they can't read the response from JavaScript in a browser context
+    if (!origin) {
+      console.log('CORS: Allowing request with no origin (same-origin or direct request)');
       return callback(null, true);
     }
     
     // In development, allow local network requests
-    if (process.env.NODE_ENV !== 'production' && origin) {
+    if (process.env.NODE_ENV !== 'production') {
       if (origin.includes('localhost') || origin.includes('127.0.0.1') || 
           origin.match(/http:\/\/(?:192\.168|10\.|172\.(?:1[6-9]|2[0-9]|3[01])\.)/)) {
         console.log('CORS: Development - allowing local network origin:', origin);
@@ -123,7 +124,7 @@ const corsOptions = {
     }
     
     // Check if origin is in allowed list
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       console.log('CORS: Origin allowed:', origin);
       callback(null, true);
     } else {
