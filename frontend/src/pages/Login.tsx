@@ -165,7 +165,6 @@ export default function LoginPage() {
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
-                  useOneTap
                   theme="outline"
                   size="large"
                   text="signin_with"

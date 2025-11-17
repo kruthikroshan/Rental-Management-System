@@ -311,7 +311,6 @@ export default function RegisterForm() {
                 <GoogleLogin
                   onSuccess={handleGoogleSuccess}
                   onError={handleGoogleError}
-                  useOneTap
                   theme="outline"
                   size="large"
                   text="signup_with"

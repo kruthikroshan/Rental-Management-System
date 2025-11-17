@@ -125,6 +125,27 @@ const UserSchema = new Schema<IUser>(
         delete ret._id;
         delete ret.__v;
         delete ret.passwordHash;
+        delete ret.salt;
+        delete ret.passwordResetToken;
+        delete ret.passwordResetExpires;
+        delete ret.refreshToken;
+        delete ret.__enc;
+        delete ret.__ac;
+        return ret;
+      },
+    },
+    toObject: {
+      transform: function (doc, ret: any) {
+        ret.id = ret._id;
+        delete ret._id;
+        delete ret.__v;
+        delete ret.passwordHash;
+        delete ret.salt;
+        delete ret.passwordResetToken;
+        delete ret.passwordResetExpires;
+        delete ret.refreshToken;
+        delete ret.__enc;
+        delete ret.__ac;
         return ret;
       },
     },

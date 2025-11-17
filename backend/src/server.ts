@@ -13,6 +13,11 @@ import {
   validateContentType,
   securityHeaders
 } from './middleware/security';
+import { 
+  sanitizeResponse, 
+  sanitizeErrors, 
+  privacyHeaders 
+} from './middleware/privacy';
 import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboardRoutes';
 import productRoutes from './routes/productRoutes';
@@ -153,6 +158,8 @@ app.use(cors(corsOptions));
 
 // Security middleware
 app.use(securityHeaders);
+app.use(privacyHeaders);
+app.use(sanitizeResponse);
 app.use(mongoSanitize({
   replaceWith: '_',
   onSanitize: ({ key }) => {
@@ -224,6 +231,7 @@ app.use('*', (req, res) => {
 });
 
 // Global error handler
+app.use(sanitizeErrors);
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Mongoose validation error
   if (err.name === 'ValidationError') {
@@ -237,10 +245,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   
   // Mongoose duplicate key error
   if (err.code === 11000) {
-    const field = Object.keys(err.keyValue)[0];
     return res.status(409).json({
       success: false,
-      message: `${field} already exists`
+      message: 'A record with this information already exists'
     });
   }
   
@@ -248,22 +255,23 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
       success: false,
-      message: 'Invalid token'
+      message: 'Invalid authentication'
     });
   }
   
   if (err.name === 'TokenExpiredError') {
     return res.status(401).json({
       success: false,
-      message: 'Token expired'
+      message: 'Session expired. Please login again.'
     });
   }
   
-  // Default error
+  // Default error - hide details in production
+  const isProduction = process.env.NODE_ENV === 'production';
   res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || 'Internal Server Error',
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    message: isProduction ? 'An error occurred' : (err.message || 'Internal Server Error'),
+    ...(isProduction ? {} : { stack: err.stack })
   });
 });
 
