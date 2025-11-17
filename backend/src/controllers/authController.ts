@@ -8,11 +8,8 @@ import bcrypt from 'bcryptjs';
 export class AuthController {
   async register(req: Request, res: Response): Promise<void> {
     try {
-      console.log('Register request body:', req.body);
-      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log('Validation errors:', errors.array());
         res.status(400).json({
           success: false,
           message: 'Validation errors',
@@ -47,7 +44,6 @@ export class AuthController {
       }
 
       // Hash password
-      console.log('Creating user with data:', { name, email, phone: validPhone, role });
       const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12');
       const passwordHash = await bcrypt.hash(password, saltRounds);
 
@@ -67,12 +63,9 @@ export class AuthController {
 
       const user = new UserModel(userData);
 
-      console.log('User created, saving to database...');
       await user.save();
-      console.log('User saved with ID:', user._id);
 
       // Generate tokens
-      console.log('Generating tokens for user:', user._id);
       const { accessToken, refreshToken } = jwtUtils.generateTokenPair({
         userId: String(user._id),
         email: user.email,
@@ -97,7 +90,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Registration error:', error);
       res.status(500).json({
         success: false,
         message: 'Registration failed',
@@ -108,11 +100,8 @@ export class AuthController {
 
   async login(req: Request, res: Response): Promise<void> {
     try {
-      console.log('Login request body:', req.body);
-      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log('Login validation errors:', errors.array());
         res.status(400).json({
           success: false,
           message: 'Validation errors',
@@ -220,7 +209,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Login error:', error);
       res.status(500).json({
         success: false,
         message: 'Login failed',
@@ -338,7 +326,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Google login error:', error);
       res.status(500).json({
         success: false,
         message: 'Google login failed',
@@ -368,7 +355,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Get profile error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to retrieve profile',
@@ -425,7 +411,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Refresh token error:', error);
       res.status(401).json({
         success: false,
         message: 'Invalid or expired refresh token'
@@ -466,7 +451,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Forgot password error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to process password reset request'
@@ -506,7 +490,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Reset password error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to reset password'
@@ -544,7 +527,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Update profile error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to update profile'
@@ -589,7 +571,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Change password error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to change password'
@@ -607,7 +588,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Logout error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to logout'
@@ -651,7 +631,6 @@ export class AuthController {
       });
 
     } catch (error: any) {
-      console.error('Delete account error:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to delete account'

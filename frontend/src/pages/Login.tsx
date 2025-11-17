@@ -64,7 +64,6 @@ export default function LoginPage() {
       
       navigate('/dashboard');
     } catch (err) {
-      console.error('Google login error:', err);
       setError(err instanceof Error ? err.message : 'Google login failed. Please try again.');
     }
   };

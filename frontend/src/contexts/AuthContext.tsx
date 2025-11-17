@@ -62,7 +62,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
       } catch (error) {
-        console.error('Error parsing stored user data:', error);
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
       }
@@ -91,9 +90,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
     try {
-      console.log('Starting login request for:', email);
-      console.log('API_BASE_URL:', API_BASE_URL);
-      
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -102,16 +98,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         body: JSON.stringify({ email, password }),
       });
 
-      console.log('Login response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
-        console.log('Login error data:', errorData);
         throw new Error(errorData.message || 'Login failed');
       }
 
       const data = await response.json();
-      console.log('Login success data:', data);
       
       setUser(data.data.user);
       setToken(data.data.tokens.accessToken);
@@ -120,10 +112,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('auth_token', data.data.tokens.accessToken);
       localStorage.setItem('auth_user', JSON.stringify(data.data.user));
       
-      console.log('Login successful, user set:', data.data.user);
-      
     } catch (error) {
-      console.error('Login error in AuthContext:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -156,10 +145,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('auth_token', data.data.tokens.accessToken);
       localStorage.setItem('auth_user', JSON.stringify(data.data.user));
       
-      console.log('Google login successful, user set:', data.data.user);
-      
     } catch (error) {
-      console.error('Google login error in AuthContext:', error);
       throw error;
     } finally {
       setIsLoading(false);

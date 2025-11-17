@@ -83,7 +83,6 @@ const Products = () => {
       if (productsResponse.success && productsResponse.data && productsResponse.data.products) {
         setProducts(productsResponse.data.products);
       } else {
-        console.warn('Products response missing data:', productsResponse);
         setProducts([]); // Ensure products is always an array
       }
 
@@ -93,7 +92,6 @@ const Products = () => {
         setCategories([{ id: 0, name: 'All Categories', slug: 'all', isActive: true, productsCount: 0 }]);
       }
     } catch (error) {
-      console.error('Error loading data:', error);
       setProducts([]); // Ensure products is always an array even on error
       toast({
         title: "Error",
@@ -138,12 +136,7 @@ const Products = () => {
   });
 
   const addToCart = (product: Product, quantity: number = 1, duration: number = 1) => {
-    console.log('addToCart called with:', { product: product.name, quantity, duration });
-    console.log('Current bookingDates:', bookingDates);
-    console.log('Current cart items:', bookingCart.items.length);
-    
     if (!bookingDates.startDate || !bookingDates.endDate) {
-      console.log('Dates not selected, showing error');
       toast({
         title: "Select Dates First",
         description: "Please select booking start and end dates at the top of the page before adding items to cart.",
@@ -154,7 +147,6 @@ const Products = () => {
       return;
     }
 
-    console.log('Dates are valid, proceeding to add to cart');
     const existingItemIndex = bookingCart.items.findIndex(item => item.productId === product.id);
     
     if (existingItemIndex >= 0) {
@@ -184,9 +176,6 @@ const Products = () => {
       }));
     }
 
-    console.log('Item added to cart successfully');
-    console.log('New cart state:', bookingCart.items.length + 1, 'items');
-    
     toast({
       title: "Added to Cart",
       description: `${product.name} has been added to your booking cart.`,
@@ -227,13 +216,7 @@ const Products = () => {
   };
 
   const handleProceedToBooking = () => {
-    console.log('=== PROCEED TO BOOKING CLICKED ===');
-    console.log('Cart data:', bookingCart);
-    console.log('Cart items count:', bookingCart.items.length);
-    console.log('Navigate function exists:', typeof navigate === 'function');
-    
     if (bookingCart.items.length === 0) {
-      console.log('Cart is empty, showing error');
       toast({
         title: "Cart is Empty",
         description: "Please add items to your cart before proceeding.",
@@ -244,11 +227,7 @@ const Products = () => {
 
     try {
       // Store cart data in localStorage to pass to booking wizard
-      console.log('Storing cart data in localStorage...');
       localStorage.setItem('bookingCartData', JSON.stringify(bookingCart));
-      console.log('Cart data stored successfully');
-      
-      console.log('Attempting navigation to /bookings/new...');
       
       // Navigate to booking wizard
       navigate('/bookings/new', { 
@@ -256,8 +235,6 @@ const Products = () => {
           cartData: bookingCart 
         } 
       });
-      
-      console.log('Navigation called successfully');
       
       // Close the cart dialog
       setShowCartDialog(false);
@@ -267,9 +244,7 @@ const Products = () => {
         description: "Creating your booking order...",
       });
       
-      console.log('=== PROCEED TO BOOKING COMPLETED ===');
     } catch (error) {
-      console.error('Error in handleProceedToBooking:', error);
       toast({
         title: "Navigation Error",
         description: "Failed to proceed to booking. Please try again.",
@@ -291,7 +266,7 @@ const Products = () => {
         title: product.name,
         text: `Check out ${product.name} for rent!`,
         url: window.location.href,
-      }).catch((error) => console.log('Error sharing:', error));
+      }).catch((error) => {});
     } else {
       // Fallback: copy to clipboard
       navigator.clipboard.writeText(window.location.href);
@@ -610,8 +585,6 @@ const Products = () => {
                     size="sm" 
                     className="flex-1"
                     onClick={() => {
-                      console.log('Add to Cart clicked for:', product.name);
-                      console.log('Booking dates:', bookingDates);
                       addToCart(product);
                     }}
                     disabled={product.availableQuantity === 0}
@@ -777,7 +750,6 @@ const Products = () => {
               <Button 
                 className="bg-green-600 hover:bg-green-700"
                 onClick={(e) => {
-                  console.log('Proceed to Booking button clicked!', e);
                   handleProceedToBooking();
                 }}
               >
@@ -815,7 +787,6 @@ const Products = () => {
             // Reload products from server
             await loadData();
           } catch (error) {
-            console.error('Error saving product:', error);
             toast({
               title: "Error",
               description: "Failed to save product. Please try again.",

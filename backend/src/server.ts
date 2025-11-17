@@ -21,7 +21,6 @@ dotenv.config();
 try {
   validateEnv();
 } catch (error) {
-  console.error('Failed to start server due to environment configuration errors');
   process.exit(1);
 }
 
@@ -123,7 +122,6 @@ const corsOptions = {
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.error('CORS Error: Origin not allowed:', origin, 'Allowed:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -206,8 +204,6 @@ app.use('*', (req, res) => {
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error('Error:', err);
-  
   // Mongoose validation error
   if (err.name === 'ValidationError') {
     const errors = Object.values(err.errors).map((e: any) => e.message);
@@ -256,47 +252,33 @@ const PORT = parseInt(process.env.PORT || '3000');
 async function startServer() {
   try {
     // Initialize database in background (non-blocking)
-    console.log('🔄 Initializing database connection...');
     initializeDatabase()
-      .then(() => console.log('✅ Database connected successfully'))
-      .catch(err => console.log('❌ MongoDB connection failed:', err.message));
+      .then(() => {})
+      .catch(err => {});
     
     // Start the HTTP server immediately (don't wait for DB)
-    console.log('🔄 Starting HTTP server...');
-    const server = app.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-      console.log(`🌐 Server listening on all interfaces (0.0.0.0:${PORT})`);
-    });
+    const server = app.listen(PORT, '0.0.0.0', () => {});
 
     server.on('error', (err) => {
-      console.error('❌ Server failed to start:', err);
       process.exit(1);
     });
 
-    server.on('listening', () => {
-      console.log('✅ Server is now listening for connections');
-    });
+    server.on('listening', () => {});
 
     // Graceful shutdown
     process.on('SIGTERM', () => {
-      console.log('🛑 Received SIGTERM, shutting down gracefully...');
       server.close(() => {
-        console.log('✅ Server closed');
         process.exit(0);
       });
     });
 
     process.on('SIGINT', () => {
-      console.log('🛑 Received SIGINT, shutting down gracefully...');
       server.close(() => {
-        console.log('✅ Server closed');
         process.exit(0);
       });
     });
 
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
-    console.error('Stack trace:', error);
     process.exit(1);
   }
 }

@@ -42,13 +42,11 @@ class JwtUtils {
       }
     }
 
-    // Development fallback with warning
+    // Development fallback
     if (!this.jwtSecret) {
-      console.warn('⚠️  WARNING: Using default JWT_SECRET. This is insecure for production!');
       this.jwtSecret = 'development-jwt-secret-key-change-in-production';
     }
     if (!this.refreshSecret) {
-      console.warn('⚠️  WARNING: Using default JWT_REFRESH_SECRET. This is insecure for production!');
       this.refreshSecret = 'development-refresh-secret-key-change-in-production';
     }
   }
