@@ -9,6 +9,7 @@ import { Eye, EyeOff, LogIn, Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import { useGoogleOAuthAvailable } from '../hooks/useGoogleOAuth';
 
 interface GoogleJwtPayload {
   email: string;
@@ -24,6 +25,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const { login, googleLogin, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  const isGoogleOAuthAvailable = useGoogleOAuthAvailable();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -152,25 +154,29 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
+              {isGoogleOAuthAvailable && (
+                <>
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
 
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="outline"
-                  size="large"
-                  text="signin_with"
-                  shape="rectangular"
-                />
-              </div>
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      theme="outline"
+                      size="large"
+                      text="signin_with"
+                      shape="rectangular"
+                    />
+                  </div>
+                </>
+              )}
             </form>
           </CardContent>
         </Card>

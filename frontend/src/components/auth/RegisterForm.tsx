@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff, Lock, Mail, User, Phone, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import { useGoogleOAuthAvailable } from '../../hooks/useGoogleOAuth';
 
 interface GoogleJwtPayload {
   email: string;
@@ -37,6 +38,7 @@ export default function RegisterForm() {
   
   const { register, googleLogin, isLoading } = useAuth();
   const navigate = useNavigate();
+  const isGoogleOAuthAvailable = useGoogleOAuthAvailable();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -298,25 +300,29 @@ export default function RegisterForm() {
                 )}
               </Button>
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
-                </div>
-              </div>
+              {isGoogleOAuthAvailable && (
+                <>
+                  <div className="relative my-6">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                    </div>
+                  </div>
 
-              <div className="flex justify-center">
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={handleGoogleError}
-                  theme="outline"
-                  size="large"
-                  text="signup_with"
-                  shape="rectangular"
-                />
-              </div>
+                  <div className="flex justify-center">
+                    <GoogleLogin
+                      onSuccess={handleGoogleSuccess}
+                      onError={handleGoogleError}
+                      theme="outline"
+                      size="large"
+                      text="signup_with"
+                      shape="rectangular"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="text-center">
                 <Link 
