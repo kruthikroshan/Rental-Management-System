@@ -156,7 +156,7 @@ export const secureStorage = {
 export function preventClickjacking(): void {
   if (window.self !== window.top) {
     // Page is in an iframe
-    window.top!.location = window.self.location;
+    window.top!.location.href = window.self.location.href;
   }
 }
 

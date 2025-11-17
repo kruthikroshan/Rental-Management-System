@@ -88,8 +88,8 @@ export const apiRateLimiter = rateLimit({
 export const slowDown = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 50,
-  delayAfter: 10, // Start delaying after 10 requests
-  delayMs: 500, // Add 500ms delay per request after delayAfter
+  standardHeaders: true,
+  legacyHeaders: false,
   skip: (req) => process.env.NODE_ENV === 'development'
 });
 
