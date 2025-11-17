@@ -4,6 +4,7 @@ import { jwtUtils } from '../utils/jwt';
 import { validationResult } from 'express-validator';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
+import { sanitizeEmail, sanitizeString, sanitizePhone, validatePasswordStrength, validateEmail } from '../utils/sanitize';
 
 export class AuthController {
   async register(req: Request, res: Response): Promise<void> {
@@ -18,7 +19,31 @@ export class AuthController {
         return;
       }
 
-      const { name, email, password, phone, role = UserRole.CUSTOMER } = req.body;
+      let { name, email, password, phone, role = UserRole.CUSTOMER } = req.body;
+
+      // Sanitize inputs
+      name = sanitizeString(name);
+      email = sanitizeEmail(email);
+      if (phone) phone = sanitizePhone(phone);
+
+      // Validate email format
+      if (!validateEmail(email)) {
+        res.status(400).json({
+          success: false,
+          message: 'Invalid email format'
+        });
+        return;
+      }
+
+      // Validate password strength
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.valid) {
+        res.status(400).json({
+          success: false,
+          message: passwordValidation.message
+        });
+        return;
+      }
 
       // Check if user exists
       const existingUser = await UserModel.findOne({ email });
@@ -110,7 +135,17 @@ export class AuthController {
         return;
       }
 
-      const { email, password } = req.body;
+      let { email, password } = req.body;
+
+      // Sanitize and validate email
+      email = sanitizeEmail(email);
+      if (!validateEmail(email)) {
+        res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+        return;
+      }
 
       // Check MongoDB connection status
       const mongoose = require('mongoose');
@@ -219,9 +254,13 @@ export class AuthController {
 
   async googleLogin(req: Request, res: Response): Promise<void> {
     try {
-      const { credential, email, name, picture } = req.body;
+      let { credential, email, name, picture } = req.body;
 
-      if (!email || !name) {
+      // Sanitize inputs
+      email = sanitizeEmail(email);
+      name = sanitizeString(name);
+
+      if (!email || !name || !validateEmail(email)) {
         res.status(400).json({
           success: false,
           message: 'Email and name are required from Google authentication'
@@ -462,6 +501,16 @@ export class AuthController {
     try {
       const { token, newPassword } = req.body;
 
+      // Validate new password strength
+      const passwordValidation = validatePasswordStrength(newPassword);
+      if (!passwordValidation.valid) {
+        res.status(400).json({
+          success: false,
+          message: passwordValidation.message
+        });
+        return;
+      }
+
       const user = await UserModel.findOne({
         passwordResetToken: token
       });
@@ -499,7 +548,11 @@ export class AuthController {
   async updateProfile(req: Request, res: Response): Promise<void> {
     try {
       const userId = String(req.user?.id || '');
-      const { name, phone } = req.body;
+      let { name, phone } = req.body;
+
+      // Sanitize inputs
+      if (name) name = sanitizeString(name);
+      if (phone) phone = sanitizePhone(phone);
 
       const user = await UserModel.findById(userId);
 
@@ -538,6 +591,16 @@ export class AuthController {
     try {
       const userId = String(req.user?.id || '');
       const { currentPassword, newPassword } = req.body;
+
+      // Validate new password strength
+      const passwordValidation = validatePasswordStrength(newPassword);
+      if (!passwordValidation.valid) {
+        res.status(400).json({
+          success: false,
+          message: passwordValidation.message
+        });
+        return;
+      }
 
       const user = await UserModel.findById(userId).select('+passwordHash');
 

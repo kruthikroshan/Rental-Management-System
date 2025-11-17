@@ -16,6 +16,7 @@ import {
   validateRefreshToken,
   authRateLimit
 } from '../middleware/auth';
+import { authRateLimiter, passwordResetLimiter } from '../middleware/security';
 
 const router = express.Router();
 
@@ -23,23 +24,31 @@ const router = express.Router();
 const registerValidation = [
   body('name')
     .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Name must be between 2 and 100 characters')
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage('Name can only contain letters and spaces'),
   body('email')
     .isEmail()
     .normalizeEmail()
-    .withMessage('Please provide a valid email'),
+    .withMessage('Please provide a valid email')
+    .isLength({ max: 255 })
+    .withMessage('Email must not exceed 255 characters'),
   body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long'),
+    .isLength({ min: 8, max: 128 })
+    .withMessage('Password must be between 8 and 128 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
   body('phone')
     .optional()
-    .isLength({ min: 1 })
-    .withMessage('Please provide a valid phone number'),
+    .matches(/^[\d\s\+\-\(\)]+$/)
+    .withMessage('Please provide a valid phone number')
+    .isLength({ max: 20 })
+    .withMessage('Phone number must not exceed 20 characters'),
   body('role')
     .optional()
-    .isIn(['customer', 'admin'])
-    .withMessage('Role must be either customer or admin')
+    .isIn(['customer', 'admin', 'manager'])
+    .withMessage('Role must be customer, admin, or manager')
 ];
 
 const loginValidation = [
@@ -57,9 +66,9 @@ const changePasswordValidation = [
     .notEmpty()
     .withMessage('Current password is required'),
   body('newPassword')
-    .isLength({ min: 8 })
-    .withMessage('New password must be at least 8 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
+    .isLength({ min: 8, max: 128 })
+    .withMessage('New password must be between 8 and 128 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/)
     .withMessage('New password must contain at least one uppercase letter, one lowercase letter, one number, and one special character')
 ];
 
@@ -67,17 +76,21 @@ const updateProfileValidation = [
   body('name')
     .optional()
     .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Name must be between 2 and 50 characters'),
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Name must be between 2 and 100 characters')
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage('Name can only contain letters and spaces'),
   body('phone')
     .optional()
-    .isMobilePhone('any')
-    .withMessage('Please provide a valid phone number'),
+    .matches(/^[\d\s\+\-\(\)]+$/)
+    .withMessage('Please provide a valid phone number')
+    .isLength({ max: 20 })
+    .withMessage('Phone number must not exceed 20 characters'),
   body('address.street')
     .optional()
     .trim()
-    .isLength({ max: 100 })
-    .withMessage('Street address must not exceed 100 characters'),
+    .isLength({ max: 200 })
+    .withMessage('Street address must not exceed 200 characters'),
   body('address.city')
     .optional()
     .trim()

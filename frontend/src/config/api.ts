@@ -49,7 +49,74 @@ export const API_ENDPOINTS = {
   },
 };
 
-console.log('🔧 API Configuration:', {
-  baseURL: API_CONFIG.baseURL,
-  environment: isProduction ? 'production' : 'development',
-});
+/**
+ * Get auth token from storage
+ */
+function getAuthToken(): string | null {
+  return localStorage.getItem('auth_token');
+}
+
+/**
+ * Create secure headers for API requests
+ */
+export function getSecureHeaders(): HeadersInit {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  };
+  
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
+/**
+ * Enhanced fetch with security features
+ */
+export async function secureFetch(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const secureOptions: RequestInit = {
+    ...options,
+    headers: {
+      ...getSecureHeaders(),
+      ...options.headers,
+    },
+    credentials: 'include', // Include cookies
+    mode: 'cors',
+  };
+  
+  // Add timeout
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), API_CONFIG.timeout);
+  
+  try {
+    const response = await fetch(url, {
+      ...secureOptions,
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeout);
+    
+    // Handle token expiration
+    if (response.status === 401) {
+      // Clear auth data
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      
+      // Redirect to login if not already there
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    clearTimeout(timeout);
+    throw error;
+  }
+}

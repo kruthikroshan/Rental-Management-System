@@ -3,8 +3,16 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import mongoSanitize from 'express-mongo-sanitize';
 import { initializeDatabase } from './config/database';
 import { validateEnv } from './config/env';
+import { 
+  sanitizeRequest, 
+  detectSuspiciousActivity, 
+  preventParameterPollution,
+  validateContentType,
+  securityHeaders
+} from './middleware/security';
 import authRoutes from './routes/auth';
 import dashboardRoutes from './routes/dashboardRoutes';
 import productRoutes from './routes/productRoutes';
@@ -142,6 +150,19 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Security middleware
+app.use(securityHeaders);
+app.use(mongoSanitize({
+  replaceWith: '_',
+  onSanitize: ({ key }) => {
+    // Potential injection attempt detected
+  }
+}));
+app.use(sanitizeRequest);
+app.use(detectSuspiciousActivity);
+app.use(preventParameterPollution);
+app.use(validateContentType);
 
 // Body parsing middleware with size limits
 app.use(express.json({ limit: process.env.MAX_REQUEST_SIZE || '10mb' }));
