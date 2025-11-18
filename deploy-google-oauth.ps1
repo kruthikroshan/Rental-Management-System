@@ -81,4 +81,4 @@ if ($openGoogle -eq "y" -or $openGoogle -eq "Y") {
 }
 
 Write-Host ""
-Write-Host "🎉 Setup complete! Follow the steps above to enable Google login on your website." -ForegroundColor Green
+Write-Host "Setup complete! Follow the steps above to enable Google login on your website." -ForegroundColor Green
