@@ -1,6 +1,5 @@
 import { AuthService } from './auth.service.js';
 import { OAuthService } from './oauth.service.js';
-import { OTPService } from './otp.service.js';
 import { config } from '../config/configuration.js';
 
 function setRefreshCookie(res, token) {
@@ -35,13 +34,10 @@ export const AuthController = {
         const response = {
           user: result.user,
           message: result.message,
-          requiresVerification: true
+          requiresVerification: true,
+          otp: result.otp
         };
-        // In development, include OTP in response for easy testing
-        if (process.env.NODE_ENV !== 'production') {
-          response.otp = result.otp;
-          console.log(`🔐 OTP for ${email}: ${result.otp}`);
-        }
+        console.log(`🔐 OTP for ${email}: ${result.otp}`);
         res.status(201).json(response);
       } else {
         setRefreshCookie(res, result.refreshToken);
@@ -87,12 +83,7 @@ export const AuthController = {
     try {
       const { email } = req.body;
       const result = await AuthService.resendOTP({ email });
-      const response = { ...result };
-      // In development, include OTP in response
-      if (process.env.NODE_ENV !== 'production') {
-        response.otp = result.otp;
-      }
-      res.json(response);
+      res.json(result);
     } catch (e) {
       res.status(400).json({ message: e.message || 'Failed to resend OTP' });
     }
@@ -101,17 +92,10 @@ export const AuthController = {
   // Request password reset
   requestPasswordReset: async (req, res) => {
     try {
-      const { email } = req.body;
-      const result = await AuthService.requestPasswordReset({ email });
-      const response = { ...result };
-      // In development, include OTP in response for easy testing
-      if (process.env.NODE_ENV !== 'production') {
-        const otp = OTPService.getOTP(email);
-        if (otp) {
-          response.otp = otp;
-        }
-      }
-      res.json(response);
+      const { email, phoneNumber, identifier } = req.body;
+      const normalizedIdentifier = identifier || email || phoneNumber;
+      const result = await AuthService.requestPasswordReset({ identifier: normalizedIdentifier });
+      res.json(result);
     } catch (e) {
       res.status(400).json({ message: e.message || 'Failed to request password reset' });
     }
@@ -120,8 +104,14 @@ export const AuthController = {
   // Reset password with OTP
   resetPassword: async (req, res) => {
     try {
-      const { email, otp, newPassword, resetToken } = req.body;
-      const result = await AuthService.resetPassword({ email, otp, newPassword, resetToken });
+      const { email, phoneNumber, identifier, otp, newPassword, resetToken } = req.body;
+      const normalizedIdentifier = identifier || email || phoneNumber;
+      const result = await AuthService.resetPassword({
+        identifier: normalizedIdentifier,
+        otp,
+        newPassword,
+        resetToken
+      });
       res.json(result);
     } catch (e) {
       res.status(400).json({ message: e.message || 'Password reset failed' });

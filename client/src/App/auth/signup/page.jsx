@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../../contexts/AuthContext';
 import AuthLayout from '../layout';
 
@@ -26,7 +25,6 @@ const SignupPage = () => {
     user, 
     error, 
     clearError,
-    googleAuth,
     requestPhoneOTP,
     verifyPhoneOTP 
   } = useAuth();
@@ -36,6 +34,7 @@ const SignupPage = () => {
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [displayedOTP, setDisplayedOTP] = useState(null);
   const [userEmail, setUserEmail] = useState(null);
+  const googleRedirectUrl = `${import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || '')}/auth/google`;
 
   const [signupMethod, setSignupMethod] = useState('email'); // 'email' or 'phone'
   const [phoneStep, setPhoneStep] = useState('request'); // 'request' or 'verify'
@@ -245,16 +244,15 @@ const SignupPage = () => {
               <div className="relative flex justify-center text-xs"><span className="px-4 bg-white text-slate-500 font-bold uppercase tracking-wider">Or</span></div>
             </div>
 
-            <div className="flex justify-center">
-              <GoogleLogin 
-                onSuccess={async (credentialResponse) => {
-                  await googleAuth(credentialResponse);
-                }}
-                onError={() => {
-                  console.error('❌ Google signup failed');
-                }}
-              />
-            </div>
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = googleRedirectUrl;
+              }}
+              className="w-full border border-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              Sign up with Google
+            </button>
           </form>
         ) : (
           <div className="space-y-6">

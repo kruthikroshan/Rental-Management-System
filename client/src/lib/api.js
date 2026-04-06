@@ -25,7 +25,7 @@ api.interceptors.request.use((config) => {
 
 // ---- helpers ----
 const isAuthEndpoint = (url = '') =>
-  /\/auth\/(login|register|refresh|logout|me)(\?|$)/.test(url);
+  /\/auth\/(login|register|refresh|logout|me|google\/verify|verify-email|resend-otp|request-password-reset|reset-password|request-phone-otp|verify-phone-otp)(\?|$)/.test(url);
 
 // Single-flight refresh lock
 let refreshInFlight = null;

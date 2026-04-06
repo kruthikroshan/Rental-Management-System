@@ -6,8 +6,15 @@ import { z } from 'zod';
 import { useAuth } from '../../../contexts/AuthContext';
 import AuthLayout from '../layout';
 
+const isEmail = (value) => /.+@.+\..+/.test(String(value || '').trim());
+const isPhone = (value) => /^\+?\d{10,15}$/.test(String(value || '').trim().replace(/[^\d+]/g, ''));
+
 const forgotPasswordSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
+  identifier: z
+    .string()
+    .trim()
+    .min(1, 'Email or phone number is required')
+    .refine((value) => isEmail(value) || isPhone(value), 'Enter a valid email or phone number'),
 });
 
 const resetPasswordSchema = z.object({
@@ -22,9 +29,10 @@ const resetPasswordSchema = z.object({
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
   const { requestPasswordReset, resetPassword, error, clearError } = useAuth();
-  const [step, setStep] = useState(1); // 1: email, 2: otp + password
-  const [email, setEmail] = useState('');
+  const [step, setStep] = useState(1); // 1: identifier, 2: otp + password
+  const [identifier, setIdentifier] = useState('');
   const [resetToken, setResetToken] = useState('');
+  const [displayedOTP, setDisplayedOTP] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -42,17 +50,18 @@ const ForgotPasswordPage = () => {
   }, [clearError]);
 
   const onEmailSubmit = async (data) => {
-    const result = await requestPasswordReset(data.email);
+    const result = await requestPasswordReset(data.identifier);
     if (result.success) {
-      setEmail(data.email);
+      setIdentifier(result.identifier || data.identifier);
       setResetToken(result.resetToken);
+      setDisplayedOTP(result.otp || '');
       setStep(2);
     }
   };
 
   const onResetSubmit = async (data) => {
     const result = await resetPassword({
-      email,
+      identifier,
       otp: data.otp,
       newPassword: data.newPassword,
       resetToken,
@@ -68,8 +77,9 @@ const ForgotPasswordPage = () => {
 
   const handleBackToEmail = () => {
     setStep(1);
-    setEmail('');
+    setIdentifier('');
     setResetToken('');
+    setDisplayedOTP('');
     clearError();
   };
 
@@ -77,7 +87,7 @@ const ForgotPasswordPage = () => {
     return (
       <AuthLayout
         title="Forgot Password"
-        subtitle="Enter your email to receive a reset code"
+        subtitle="Enter your email or phone to receive a reset code"
         linkText="Remember your password?"
         linkTo="/auth/login"
         linkLabel="Sign in"
@@ -95,18 +105,18 @@ const ForgotPasswordPage = () => {
             </div>
           )}
 
-          {/* Email Field */}
+          {/* Email / Phone Field */}
           <div className="space-y-2">
-            <label htmlFor="email" className="block text-sm font-semibold text-slate-700">
-              Email address
+            <label htmlFor="identifier" className="block text-sm font-semibold text-slate-700">
+              Email or phone number
             </label>
             <div className="relative">
               <input
-                {...emailForm.register('email')}
-                type="email"
-                id="email"
+                {...emailForm.register('identifier')}
+                type="text"
+                id="identifier"
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white/50 backdrop-blur-sm placeholder-slate-400 text-slate-900"
-                placeholder="Enter your email"
+                placeholder="Enter email or phone number"
               />
               <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                 <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,12 +124,12 @@ const ForgotPasswordPage = () => {
                 </svg>
               </div>
             </div>
-            {emailForm.formState.errors.email && (
+            {emailForm.formState.errors.identifier && (
               <p className="text-red-500 text-sm mt-1 flex items-center">
                 <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {emailForm.formState.errors.email.message}
+                {emailForm.formState.errors.identifier.message}
               </p>
             )}
           </div>
@@ -159,6 +169,22 @@ const ForgotPasswordPage = () => {
       showBackToHome={false}
     >
       <form onSubmit={resetForm.handleSubmit(onResetSubmit)} className="space-y-6">
+        {/* Screen OTP */}
+        {displayedOTP && (
+          <div className="bg-green-50/90 border border-green-200 text-green-700 px-4 py-3 rounded-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold">Screen OTP: {displayedOTP}</span>
+              <button
+                type="button"
+                onClick={() => setDisplayedOTP('')}
+                className="text-green-700/70 hover:text-green-800"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Error Alert */}
         {error && (
           <div className="bg-red-50/80 border border-red-200 text-red-700 px-4 py-3 rounded-xl backdrop-blur-sm">
@@ -177,7 +203,7 @@ const ForgotPasswordPage = () => {
             Reset code sent to
           </p>
           <p className="text-sm font-semibold text-slate-900 mt-1">
-            {email}
+            {identifier}
           </p>
         </div>
 

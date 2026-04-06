@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../../../contexts/AuthContext';
 import AuthLayout from '../layout';
 
@@ -16,7 +15,7 @@ const loginSchema = z.object({
 const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, googleAuth, requestPhoneOTP, verifyPhoneOTP, isAuthenticated, user, error, clearError } = useAuth();
+  const { login, requestPhoneOTP, verifyPhoneOTP, isAuthenticated, user, error, clearError } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loginMethod, setLoginMethod] = useState('email'); // 'email' or 'phone'
   const [phoneStep, setPhoneStep] = useState('request'); // 'request' or 'verify'
@@ -25,6 +24,7 @@ const LoginPage = () => {
   const [userName, setUserName] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
   const [displayedOTP, setDisplayedOTP] = useState(null);
+  const googleRedirectUrl = `${import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || '')}/auth/google`;
 
   const {
     register,
@@ -264,16 +264,15 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <GoogleLogin
-              onSuccess={async (credentialResponse) => {
-                await googleAuth(credentialResponse);
-              }}
-              onError={() => {
-                console.error('❌ Google login failed');
-              }}
-            />
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.href = googleRedirectUrl;
+            }}
+            className="w-full mt-3 border border-slate-200 text-slate-700 font-semibold py-2.5 rounded-xl hover:bg-slate-50 transition-colors"
+          >
+            Sign in with Google
+          </button>
         </form>
       ) : (
         <div className="space-y-6">

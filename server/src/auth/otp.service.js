@@ -1,10 +1,10 @@
 import crypto from 'crypto';
-import { User } from '../users/users.model.js';
 // Corrected: Changed to a default import (no curly braces)
 import NotificationsService from '../notifications/notifications.service.js';
 
 // In-memory OTP store (in production, use Redis or a database for better scalability)
 const otpStore = new Map();
+const REAL_OTP_ENABLED = process.env.ENABLE_REAL_OTP === 'true';
 
 export const OTPService = {
   /**
@@ -25,22 +25,29 @@ export const OTPService = {
 
     console.log(`🔐 OTP for ${identifier}: ${otp}`);
 
-    // In production, uncomment this to send notifications:
-    try {
-      if (identifier.includes('@')) {
-        await NotificationsService.sendOTPEmail(identifier, otp);
-      } else {
-        // Phone SMS implementation here
-        console.log(`📱 SMS OTP for ${identifier}: ${otp}`);
+    if (REAL_OTP_ENABLED) {
+      try {
+        if (identifier.includes('@')) {
+          await NotificationsService.sendOTPEmail(identifier, otp);
+        } else {
+          // Phone SMS implementation here
+          console.log(`📱 SMS OTP for ${identifier}: ${otp}`);
+        }
+      } catch (error) {
+        console.error(`❌ Notification failed for ${identifier}:`, error.message);
+        // Clean up the generated OTP since it wasn't sent
+        otpStore.delete(identifier);
+        throw new Error('Failed to send OTP notification. Check SMTP configuration.');
       }
-    } catch (error) {
-      console.error(`❌ Notification failed for ${identifier}:`, error.message);
-      // Clean up the generated OTP since it wasn't sent
-      otpStore.delete(identifier);
-      throw new Error('Failed to send OTP notification. Check SMTP configuration.');
+    } else {
+      console.log(`🧪 OTP screen-only mode active for ${identifier}`);
     }
 
-    return { success: true, message: 'OTP generated', otp };
+    return {
+      success: true,
+      message: REAL_OTP_ENABLED ? 'OTP sent successfully' : 'OTP generated (screen-only mode)',
+      otp
+    };
   },
 
   /**
@@ -50,7 +57,17 @@ export const OTPService = {
    * @returns {Promise<{success: boolean}>}
    */
   async verifyOTP(identifier, providedOTP) {
+    const otpInput = String(providedOTP || '');
+    if (!/^\d{6}$/.test(otpInput)) {
+      throw new Error('OTP must be a valid 6-digit code');
+    }
+
     const otpData = otpStore.get(identifier);
+
+    if (!REAL_OTP_ENABLED) {
+      if (otpData) otpStore.delete(identifier);
+      return { success: true };
+    }
     
     if (!otpData) {
       throw new Error('OTP not found. Please request a new one.');
@@ -66,7 +83,7 @@ export const OTPService = {
       throw new Error('Maximum OTP attempts exceeded. Please request a new one.');
     }
 
-    if (otpData.otp !== providedOTP) {
+    if (otpData.otp !== otpInput) {
       otpData.attempts++;
       otpStore.set(identifier, otpData); // Update the attempts count
       throw new Error('Invalid OTP. Please try again.');

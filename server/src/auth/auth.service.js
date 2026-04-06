@@ -13,6 +13,27 @@ function signRefreshToken(payload) {
 }
 
 export const AuthService = {
+  _resolveIdentifier(identifier) {
+    const raw = String(identifier || '').trim();
+    if (!raw) throw new Error('Email or phone number is required');
+
+    if (raw.includes('@')) {
+      const email = raw.toLowerCase();
+      return { identifier: email, query: { email }, type: 'email' };
+    }
+
+    const normalizedPhone = raw.replace(/[^\d+]/g, '');
+    if (!/^\+?\d{10,15}$/.test(normalizedPhone)) {
+      throw new Error('Please enter a valid phone number');
+    }
+
+    return {
+      identifier: normalizedPhone,
+      query: { phoneNumber: normalizedPhone },
+      type: 'phone'
+    };
+  },
+
   // New helper: validate credentials only (no tokens here)
   async validateCredentials({ email, password }) {
     const user = await User.findOne({ email });
@@ -96,8 +117,9 @@ export const AuthService = {
   },
 
   // Request password reset OTP
-  async requestPasswordReset({ email }) {
-    const user = await User.findOne({ email });
+  async requestPasswordReset({ identifier }) {
+    const target = this._resolveIdentifier(identifier);
+    const user = await User.findOne(target.query);
     if (!user) throw new Error('User not found');
     
     // Generate password reset token
@@ -107,17 +129,20 @@ export const AuthService = {
     await user.save();
     
     // Generate OTP for password reset
-    await OTPService.generateOTP(email);
+    const otpResult = await OTPService.generateOTP(target.identifier);
     
     return { 
-      message: 'Password reset OTP sent to your email',
-      resetToken // In production, don't return this, send via email
+      message: `Password reset OTP generated for your ${target.type === 'email' ? 'email' : 'phone number'}`,
+      resetToken,
+      otp: otpResult.otp,
+      identifier: target.identifier
     };
   },
 
   // Reset password with OTP
-  async resetPassword({ email, otp, newPassword, resetToken }) {
-    const user = await User.findOne({ email });
+  async resetPassword({ identifier, otp, newPassword, resetToken }) {
+    const target = this._resolveIdentifier(identifier);
+    const user = await User.findOne(target.query);
     if (!user) throw new Error('User not found');
     
     // Verify reset token
@@ -135,7 +160,7 @@ export const AuthService = {
     }
     
     // Verify OTP
-    await OTPService.verifyOTP(email, otp);
+    await OTPService.verifyOTP(target.identifier, otp);
     
     // Update password
     user.passwordHash = await bcrypt.hash(newPassword, 12);
@@ -150,13 +175,16 @@ export const AuthService = {
   // --- Phone Auth Methods ---
 
   async requestPhoneOTP({ phoneNumber }) {
-    if (!phoneNumber) throw new Error('Phone number is required');
+    const normalizedPhone = String(phoneNumber || '').trim().replace(/[^\d+]/g, '');
+    if (!/^\+?\d{10,15}$/.test(normalizedPhone)) {
+      throw new Error('Phone number is required');
+    }
     
     // Check if user exists, otherwise it will be created on verification
-    const user = await User.findOne({ phoneNumber });
+    const user = await User.findOne({ phoneNumber: normalizedPhone });
     
     // Generate OTP
-    const otpResult = await OTPService.generateOTP(phoneNumber);
+    const otpResult = await OTPService.generateOTP(normalizedPhone);
     
     return {
       message: 'OTP sent to your phone number',
@@ -166,21 +194,27 @@ export const AuthService = {
   },
 
   async verifyPhoneOTP({ phoneNumber, otp, name }) {
-    if (!phoneNumber || !otp) throw new Error('Phone number and OTP are required');
+    const normalizedPhone = String(phoneNumber || '').trim().replace(/[^\d+]/g, '');
+    if (!/^\+?\d{10,15}$/.test(normalizedPhone) || !otp) {
+      throw new Error('Phone number and OTP are required');
+    }
     
     // Verify OTP
-    await OTPService.verifyOTP(phoneNumber, otp);
+    await OTPService.verifyOTP(normalizedPhone, otp);
     
-    let user = await User.findOne({ phoneNumber });
+    let user = await User.findOne({ phoneNumber: normalizedPhone });
     
     if (!user) {
       // Create new user if it doesn't exist
       if (!name) throw new Error('Name is required for new users');
+      const syntheticEmail = `${normalizedPhone}@phone.local`;
       user = await User.create({
-        phoneNumber,
+        email: syntheticEmail,
+        phoneNumber: normalizedPhone,
         name,
         provider: 'phone',
         isPhoneVerified: true,
+        isEmailVerified: false,
         // No password needed for phone-only login
       });
     } else {

@@ -150,11 +150,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const requestPasswordReset = async (email) => {
+  const requestPasswordReset = async (identifier) => {
     try {
       dispatch({ type: 'SET_ERROR', payload: null });
-      const data = await authAPI.requestPasswordReset({ email });
-      return { success: true, message: data.message, resetToken: data.resetToken };
+      const data = await authAPI.requestPasswordReset({ identifier });
+      return {
+        success: true,
+        message: data.message,
+        resetToken: data.resetToken,
+        otp: data.otp,
+        identifier: data.identifier
+      };
     } catch (error) {
       const message = error.response?.data?.message || 'Failed to request password reset';
       dispatch({ type: 'SET_ERROR', payload: message });
@@ -183,8 +189,18 @@ export const AuthProvider = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       dispatch({ type: 'SET_ERROR', payload: null });
 
+      const token =
+        credentialResponse?.credential ||
+        credentialResponse?.token ||
+        credentialResponse?.idToken ||
+        (typeof credentialResponse === 'string' ? credentialResponse : null);
+
+      if (!token) {
+        throw new Error('Google did not return a credential token');
+      }
+
       // Send Google credential to backend for verification
-      const data = await authAPI.googleLogin({ token: credentialResponse.credential });
+      const data = await authAPI.googleLogin({ token });
 
       setAccessToken(data.accessToken);
       dispatch({ type: 'SET_USER', payload: data.user });

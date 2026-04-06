@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './contexts/AuthContext';
 import { WishlistProvider } from './contexts/WishlistContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -39,10 +38,9 @@ import AdminReviews from './App/admin/reviews/page';
 
 function App() {
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
-      <AuthProvider>
-        <WishlistProvider>
-          <Router>
+    <AuthProvider>
+      <WishlistProvider>
+        <Router>
           <div className="App">
             <Routes>
             {/* Landing page */}
@@ -133,7 +131,6 @@ function App() {
         </Router>
       </WishlistProvider>
     </AuthProvider>
-    </GoogleOAuthProvider>
   );
 }
 
