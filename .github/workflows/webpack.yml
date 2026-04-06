@@ -1,0 +1,21 @@
+name: Webpack
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build with Webpack if config exists
+        run: |
+          if [ -f webpack.config.js ] || [ -f client/webpack.config.js ]; then
+            if [ -f package-lock.json ]; then npm ci; elif [ -f yarn.lock ]; then yarn install --frozen-lockfile; else npm install; fi
+            npx webpack --mode production
+          else
+            echo "No webpack configuration found. Skipping Webpack build."
+          fi

@@ -1,0 +1,22 @@
+name: Deno
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - name: Run Deno checks if project exists
+        run: |
+          if [ -f deno.json ] || [ -f deno.jsonc ]; then
+            deno fmt --check
+            deno lint
+            deno test -A
+          else
+            echo "No Deno configuration found. Skipping Deno checks."
+          fi
