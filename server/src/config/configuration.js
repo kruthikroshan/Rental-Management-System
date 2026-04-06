@@ -1,19 +1,37 @@
 import 'dotenv/config';
 
+const trimTrailingSlash = (value) => String(value || '').trim().replace(/\/+$/, '');
+
+const normalizeOrigin = (value) => {
+  const raw = trimTrailingSlash(value);
+  if (!raw) return null;
+
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return raw;
+  }
+};
+
 const buildCorsOrigin = () => {
   const envOrigins = process.env.CLIENT_ORIGIN
-    ? process.env.CLIENT_ORIGIN.split(',').map(o => o.trim()).filter(Boolean)
+    ? process.env.CLIENT_ORIGIN
+        .split(',')
+        .map(normalizeOrigin)
+        .filter(Boolean)
     : [];
+
+  const dedupedOrigins = [...new Set(envOrigins)];
 
   // In development, automatically allow common Vite ports
   if ((process.env.NODE_ENV || 'development') !== 'production') {
     const devOrigins = ['http://localhost:5173', 'http://localhost:5174'];
     for (const origin of devOrigins) {
-      if (!envOrigins.includes(origin)) envOrigins.push(origin);
+      if (!dedupedOrigins.includes(origin)) dedupedOrigins.push(origin);
     }
   }
 
-  return envOrigins.length > 0 ? envOrigins : true; // reflect request origin if none provided
+  return dedupedOrigins.length > 0 ? dedupedOrigins : true; // reflect request origin if none provided
 };
 
 // Validate required environment variables
@@ -59,8 +77,12 @@ export const config = {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:4000/auth/google/callback'
+      callbackURL:
+        trimTrailingSlash(process.env.GOOGLE_CALLBACK_URL) ||
+        (trimTrailingSlash(process.env.RENDER_EXTERNAL_URL)
+          ? `${trimTrailingSlash(process.env.RENDER_EXTERNAL_URL)}/auth/google/callback`
+          : 'http://localhost:4000/auth/google/callback')
     }
   },
-  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173'
+  frontendUrl: trimTrailingSlash(process.env.FRONTEND_URL || 'http://localhost:5173')
 };

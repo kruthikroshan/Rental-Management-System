@@ -55,6 +55,7 @@ export async function createApp() {
   await connectMongoWithFallback();
 
   const app = express();
+  app.set('trust proxy', true);
 
   // Earliest logging - before anything else
   app.use((req, res, next) => {
