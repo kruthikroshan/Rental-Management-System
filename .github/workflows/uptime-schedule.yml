@@ -1,0 +1,39 @@
+name: Uptime Schedule
+
+on:
+  # 2 runs per weekday (~40-50 runs per month depending calendar)
+  schedule:
+    - cron: "0 6,18 * * 1-5"
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    env:
+      BACKEND_HEALTH_URL: ${{ vars.BACKEND_HEALTH_URL }}
+      FRONTEND_URL: ${{ vars.FRONTEND_URL }}
+    steps:
+      - name: Show run context
+        run: |
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Run number: ${{ github.run_number }}"
+
+      - name: Check backend health (if configured)
+        run: |
+          if [ -z "$BACKEND_HEALTH_URL" ]; then
+            echo "BACKEND_HEALTH_URL is not set. Skipping backend check."
+            exit 0
+          fi
+          echo "Checking backend: $BACKEND_HEALTH_URL"
+          curl -fsS "$BACKEND_HEALTH_URL"
+
+      - name: Check frontend (if configured)
+        run: |
+          if [ -z "$FRONTEND_URL" ]; then
+            echo "FRONTEND_URL is not set. Skipping frontend check."
+            exit 0
+          fi
+          echo "Checking frontend: $FRONTEND_URL"
+          curl -IfsS "$FRONTEND_URL"
