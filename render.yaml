@@ -1,7 +1,7 @@
 services:
   - type: web
     name: rental-management-backend
-    env: node
+    runtime: node
     plan: free
     rootDir: server
     buildCommand: npm install
@@ -29,19 +29,4 @@ services:
       - key: GOOGLE_CLIENT_SECRET
         sync: false
       - key: GOOGLE_CALLBACK_URL
-        sync: false
-
-  - type: web
-    name: rental-management-frontend
-    env: static
-    plan: free
-    rootDir: client
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    envVars:
-      - key: VITE_API_URL
         sync: false
