@@ -1,0 +1,11 @@
+﻿name: Extra Workflow 27
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo
+        run: echo "Extra workflow 27 executed"
