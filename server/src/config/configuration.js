@@ -13,6 +13,22 @@ const normalizeOrigin = (value) => {
   }
 };
 
+const normalizeHostAsOrigin = (value) => {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  return normalizeOrigin(withScheme);
+};
+
+const isTrustedVercelOrigin = (value) => {
+  try {
+    const parsed = new URL(String(value || '').trim());
+    return parsed.protocol === 'https:' && parsed.hostname.endsWith('.vercel.app');
+  } catch {
+    return false;
+  }
+};
+
 const buildCorsOrigin = () => {
   const envOrigins = process.env.CLIENT_ORIGIN
     ? process.env.CLIENT_ORIGIN
@@ -21,7 +37,12 @@ const buildCorsOrigin = () => {
         .filter(Boolean)
     : [];
 
-  const dedupedOrigins = [...new Set(envOrigins)];
+  const frontendOrigin = normalizeOrigin(process.env.FRONTEND_URL);
+  const vercelOrigin = normalizeHostAsOrigin(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL
+  );
+
+  const dedupedOrigins = [...new Set([...envOrigins, frontendOrigin, vercelOrigin].filter(Boolean))];
 
   // In development, automatically allow common Vite ports
   if ((process.env.NODE_ENV || 'development') !== 'production') {
@@ -33,6 +54,33 @@ const buildCorsOrigin = () => {
 
   return dedupedOrigins.length > 0 ? dedupedOrigins : true; // reflect request origin if none provided
 };
+
+const buildCorsOriginValidator = (allowedOrigins) => {
+  const allowVercelOrigins = process.env.ALLOW_VERCEL_ORIGINS
+    ? process.env.ALLOW_VERCEL_ORIGINS === 'true'
+    : true;
+
+  return (origin, callback) => {
+    // Requests from tools/servers may not include an Origin header.
+    if (!origin) return callback(null, true);
+
+    const normalizedOrigin = normalizeOrigin(origin);
+    if (!normalizedOrigin) return callback(null, false);
+
+    if (allowedOrigins === true) return callback(null, true);
+    if (Array.isArray(allowedOrigins) && allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    if (allowVercelOrigins && isTrustedVercelOrigin(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(null, false);
+  };
+};
+
+const corsOrigins = buildCorsOrigin();
 
 // Validate required environment variables
 const requiredEnvVars = ['MONGO_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
@@ -60,8 +108,9 @@ export const config = {
   },
   cors: {
     // Accept env-provided origins, plus common localhost dev ports when not in production.
-    origin: buildCorsOrigin(),
+    origin: buildCorsOriginValidator(corsOrigins),
     credentials: true,
+    allowedOrigins: corsOrigins === true ? [] : corsOrigins,
   },
   cookies: {
     name: process.env.COOKIE_NAME || 'rt',

@@ -36,7 +36,8 @@ export const AuthService = {
 
   // New helper: validate credentials only (no tokens here)
   async validateCredentials({ email, password }) {
-    const user = await User.findOne({ email });
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) throw new Error('Invalid email or password');
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) throw new Error('Invalid email or password');
@@ -44,19 +45,20 @@ export const AuthService = {
   },
 
   async register({ name, email, password }) {
-    const exists = await User.findOne({ email });
+    const normalizedEmail = String(email || '').trim().toLowerCase();
+    const exists = await User.findOne({ email: normalizedEmail });
     if (exists) throw new Error('Email already in use');
     const passwordHash = await bcrypt.hash(password, 12);
     const user = await User.create({
       name,
-      email,
+      email: normalizedEmail,
       passwordHash,
       isEmailVerified: false
     });
 
     // Generate OTP for email verification
     try {
-      const otpResult = await OTPService.generateOTP(email);
+      const otpResult = await OTPService.generateOTP(normalizedEmail);
 
       return {
         user: this._publicUser(user),
