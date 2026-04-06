@@ -34,14 +34,20 @@ export const AuthService = {
     });
 
     // Generate OTP for email verification
-    const otpResult = await OTPService.generateOTP(email);
+    try {
+      const otpResult = await OTPService.generateOTP(email);
 
-    return {
-      user: this._publicUser(user),
-      message: 'Registration successful. Please verify your email with the OTP sent.',
-      requiresVerification: true,
-      otp: otpResult.otp // Return OTP for development
-    };
+      return {
+        user: this._publicUser(user),
+        message: 'Registration successful. Please verify your email with the OTP sent.',
+        requiresVerification: true,
+        otp: otpResult.otp // Return OTP for development
+      };
+    } catch (error) {
+      // If OTP fails to send, delete the newly created user so they aren't stuck unverified
+      await User.findByIdAndDelete(user._id);
+      throw error;
+    }
   },
 
   async login({ email, password }) {

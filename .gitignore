@@ -1,3 +1,49 @@
-**/node_modules
+# =============================================
+# SmartRent Project - .gitignore
+# =============================================
+
+# Dependency directories
+**/node_modules/
+
+# Environment files (contains secrets - use .env.example instead)
 **/.env
 .env
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# Build output
+**/dist/
+**/build/
+
+# Log files
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Uploads directory (user-generated content, not for version control)
+server/uploads/
+
+# Generated PDF files
+server/public/*.pdf
+
+# Prisma
+**/prisma/.migration-lock*
+
+# Package lock (using npm, keep package-lock.json for reproducible installs)
+# Uncomment if you want to exclude:
+# package-lock.json

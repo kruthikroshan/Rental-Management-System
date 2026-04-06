@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { setAccessToken } from '../../../lib/api';
+import { authAPI, setAccessToken } from '../../../lib/api';
 
 export default function OAuthCallbackPage() {
   const [searchParams] = useSearchParams();
@@ -25,19 +25,8 @@ export default function OAuthCallbackPage() {
           // Set token in API client
           setAccessToken(token);
 
-          // Fetch user info with the new token
-          const response = await fetch('/api/auth/me', {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to fetch user info');
-          }
-
-          const data = await response.json();
+          // Use shared API client so production/development base URLs stay consistent.
+          const data = await authAPI.me();
           const user = data.user;
 
           console.log('✅ [OAuth Callback] User authenticated:', user.email);

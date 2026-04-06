@@ -205,7 +205,7 @@ export const AuthController = {
       console.log(`✅ [OAuth] Callback - User authenticated: ${user.email}`);
 
       if (!user) {
-        return res.redirect('http://localhost:5173/auth/login?error=no_user');
+        return res.redirect(`${config.frontendUrl}/auth/login?error=no_user`);
       }
 
       // Issue application tokens
@@ -215,12 +215,12 @@ export const AuthController = {
       setRefreshCookie(res, refreshToken);
 
       // Redirect to frontend with token in URL
-      const redirectUrl = `http://localhost:5173/auth/callback?token=${encodeURIComponent(accessToken)}&provider=google`;
+      const redirectUrl = `${config.frontendUrl}/auth/callback?token=${encodeURIComponent(accessToken)}&provider=google`;
       console.log(`🔄 [OAuth] Redirecting to: /auth/callback`);
       res.redirect(redirectUrl);
     } catch (err) {
       console.error('❌ [OAuth] Callback error:', err.message);
-      res.redirect(`http://localhost:5173/auth/login?error=${encodeURIComponent(err.message)}`);
+      res.redirect(`${config.frontendUrl}/auth/login?error=${encodeURIComponent(err.message)}`);
     }
   },
 
@@ -252,5 +252,4 @@ export const AuthController = {
     }
   }
 };
-
 

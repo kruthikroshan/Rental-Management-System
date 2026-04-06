@@ -26,16 +26,19 @@ export const OTPService = {
     console.log(`🔐 OTP for ${identifier}: ${otp}`);
 
     // In production, uncomment this to send notifications:
-    // try {
-    //   if (identifier.includes('@')) {
-    //     await NotificationsService.sendOTPEmail(identifier, otp);
-    //   } else {
-    //     // Phone SMS implementation here
-    //     console.log(`📱 SMS OTP for ${identifier}: ${otp}`);
-    //   }
-    // } catch (error) {
-    //   console.error(`❌ Notification failed for ${identifier}:`, error.message);
-    // }
+    try {
+      if (identifier.includes('@')) {
+        await NotificationsService.sendOTPEmail(identifier, otp);
+      } else {
+        // Phone SMS implementation here
+        console.log(`📱 SMS OTP for ${identifier}: ${otp}`);
+      }
+    } catch (error) {
+      console.error(`❌ Notification failed for ${identifier}:`, error.message);
+      // Clean up the generated OTP since it wasn't sent
+      otpStore.delete(identifier);
+      throw new Error('Failed to send OTP notification. Check SMTP configuration.');
+    }
 
     return { success: true, message: 'OTP generated', otp };
   },

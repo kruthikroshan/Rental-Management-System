@@ -61,6 +61,6 @@ export const config = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:4000/auth/google/callback'
     }
-  }
+  },
+  frontendUrl: process.env.FRONTEND_URL || 'http://localhost:5173'
 };
-

@@ -2,8 +2,8 @@ import nodemailer from 'nodemailer';
 
 class NotificationsService {
   constructor() {
-    // Only initialize transporter in production
-    if (process.env.NODE_ENV === 'production') {
+    // Initialize transporter if email credentials are provided
+    if (process.env.GMAIL_USER && process.env.GMAIL_PASS) {
       this.transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -12,7 +12,7 @@ class NotificationsService {
         }
       });
     } else {
-      this.transporter = null; // Skip in development
+      this.transporter = null; // Skip if no credentials configured
     }
   }
 
@@ -24,9 +24,12 @@ class NotificationsService {
    * @returns {Promise<boolean>} - True if the email was sent successfully.
    */
   async sendEmail(to, subject, html) {
-    // In development, skip email sending
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`📧 [DEV MODE] Email skipped for: ${to}`);
+    // Skip email sending if credentials aren't set
+    if (!this.transporter) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Email credentials not configured but required in production');
+      }
+      console.log(`📧 [DEV/UNCONFIGURED MODE] Email skipped for: ${to}`);
       return true;
     }
 
@@ -54,9 +57,12 @@ class NotificationsService {
    * @returns {Promise<boolean>}
    */
   async sendOTPEmail(userEmail, otp) {
-    // Skip email sending in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`📧 [DEV MODE] OTP email skipped for: ${userEmail}`);
+    // Skip email sending if credentials aren't set
+    if (!this.transporter) {
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Email credentials not configured but required in production');
+      }
+      console.log(`📧 [DEV/UNCONFIGURED MODE] OTP email skipped for: ${userEmail}`);
       return true;
     }
 

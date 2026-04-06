@@ -2,6 +2,7 @@ import { Router } from 'express';
 import passport from 'passport';
 import { AuthController } from './auth.controller.js';
 import { requireAuth, requireRole, optionalRefreshContext } from './auth.middleware.js';
+import { config } from '../config/configuration.js';
 
 export const authRouter = Router();
 
@@ -28,7 +29,10 @@ authRouter.post('/logout', optionalRefreshContext, requireAuth, AuthController.l
 // Google OAuth routes
 authRouter.get('/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
 authRouter.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:5173/auth/login?error=oauth_failed', session: false }),
+  passport.authenticate('google', {
+    failureRedirect: `${config.frontendUrl}/auth/login?error=oauth_failed`,
+    session: false
+  }),
   AuthController.googleCallback
 );
 authRouter.post('/google/verify', AuthController.googleVerify);
