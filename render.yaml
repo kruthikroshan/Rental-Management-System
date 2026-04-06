@@ -17,9 +17,9 @@ services:
       - key: JWT_REFRESH_SECRET
         sync: false
       - key: CLIENT_ORIGIN
-        sync: false
+        value: https://rental-management-system-taupe.vercel.app
       - key: FRONTEND_URL
-        sync: false
+        value: https://rental-management-system-taupe.vercel.app
       - key: COOKIE_SECURE
         value: "true"
       - key: COOKIE_SAME_SITE
