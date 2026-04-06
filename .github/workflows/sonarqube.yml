@@ -1,0 +1,14 @@
+name: SonarQube
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Template placeholder
+        run: |
+          echo "SonarQube workflow scaffold is added."
+          echo "Set SONAR_TOKEN secret and SONAR_HOST_URL variable before running full analysis."

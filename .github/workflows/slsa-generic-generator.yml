@@ -1,0 +1,14 @@
+name: SLSA Generic generator
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Template placeholder
+        run: |
+          echo "SLSA Generic generator workflow scaffold is added."
+          echo "Configure artifact inputs and provenance settings for your build outputs."

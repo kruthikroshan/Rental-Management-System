@@ -1,0 +1,14 @@
+name: Build and Deploy to GKE
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Template placeholder
+        run: |
+          echo "Build and Deploy to GKE workflow scaffold is added."
+          echo "Configure GCP auth, Artifact Registry, cluster name, and manifest path before production use."

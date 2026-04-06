@@ -1,0 +1,14 @@
+name: SonarCloud
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Template placeholder
+        run: |
+          echo "SonarCloud workflow scaffold is added."
+          echo "Set SONAR_TOKEN secret and SonarCloud project metadata before running full analysis."

@@ -1,0 +1,14 @@
+name: Greetings
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Template placeholder
+        run: |
+          echo "Greetings workflow scaffold is added."
+          echo "Customize greeting messages and issue/pull request trigger conditions."

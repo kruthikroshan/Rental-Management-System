@@ -1,0 +1,14 @@
+name: AI issue summary
+
+on:
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Template placeholder
+        run: |
+          echo "AI issue summary workflow scaffold is added."
+          echo "Configure permissions and summarization conditions based on your team workflow."
