@@ -2,6 +2,9 @@ name: Deploy to Alibaba Cloud ACK
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   run:

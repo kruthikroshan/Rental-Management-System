@@ -1,7 +1,10 @@
-﻿name: Extra Workflow 15
+name: Extra Workflow 15
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   run:

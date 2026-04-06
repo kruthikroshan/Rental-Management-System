@@ -2,6 +2,9 @@ name: Deploy Node.js to Azure Function App
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
   run:
